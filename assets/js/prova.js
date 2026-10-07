@@ -3,9 +3,12 @@
    EXECUÇÃO DA AVALIAÇÃO
 
    VERSÃO:
+   - acesso direto pelo link da prova
+   - aluno sem login PAS
+   - tentativa criada automaticamente
    - início automático
    - cronômetro persistente
-   - tentativa individual
+   - tentativa individual por navegador
    - F5 não reinicia tempo
    - monitoramento de troca de tela
    - encerramento persistente
@@ -35,15 +38,25 @@ const urlParams =
 
 
 const codigoProva =
-  urlParams.get(
-    "codigo"
-  );
+  String(
+    urlParams.get("codigo") || ""
+  )
+    .trim()
+    .toUpperCase();
 
 
-const tentativaId =
-  urlParams.get(
-    "tentativa"
-  );
+/* =========================================================
+   IDENTIFICAÇÃO DA TENTATIVA
+
+   O aluno NÃO precisa fazer login no PAS.
+
+   Cada navegador recebe automaticamente uma identificação
+   para aquela prova.
+
+   Essa identificação é preservada no localStorage.
+   ========================================================= */
+
+let tentativaId = null;
 
 
 /* =========================================================
@@ -55,19 +68,21 @@ const nomeAluno =
     "aluno_nome"
   )
   ||
-  "Aluno Não Identificado";
+  "Aluno";
 
 
 /* =========================================================
-   CHAVE ÚNICA DA TENTATIVA
+   CHAVES DE ARMAZENAMENTO
    ========================================================= */
 
-const chaveSessao =
-  codigoProva && tentativaId
-
-    ? `pas_prova_${codigoProva}_${tentativaId}`
-
+const chaveTentativa =
+  codigoProva
+    ? `pas_tentativa_${codigoProva}`
     : null;
+
+
+let chaveSessao =
+  null;
 
 
 /* =========================================================
@@ -159,13 +174,132 @@ const elLoader =
 
 
 /* =========================================================
-   MOSTRAR ALUNO
+   INFORMAÇÃO SUPERIOR
    ========================================================= */
 
 if (elInfoAluno) {
 
   elInfoAluno.innerText =
-    `Aluno: ${nomeAluno}`;
+    "PAS-PROVA";
+
+}
+
+
+/* =========================================================
+   GERAR ID
+   ========================================================= */
+
+function gerarTentativaId() {
+
+  /*
+    Navegadores modernos.
+  */
+
+  if (
+    window.crypto &&
+    typeof window.crypto.randomUUID === "function"
+  ) {
+
+    return window.crypto.randomUUID();
+
+  }
+
+
+  /*
+    Compatibilidade.
+  */
+
+  return (
+    Date.now().toString(36)
+    +
+    "-"
+    +
+    Math.random()
+      .toString(36)
+      .substring(2, 12)
+  );
+
+}
+
+
+/* =========================================================
+   PREPARAR TENTATIVA
+   ========================================================= */
+
+function prepararTentativa() {
+
+  if (!codigoProva) {
+
+    return false;
+
+  }
+
+
+  /*
+    Primeiro verificamos se este navegador
+    já possui uma tentativa para esta prova.
+  */
+
+  try {
+
+    tentativaId =
+      localStorage.getItem(
+        chaveTentativa
+      );
+
+  }
+
+  catch (erro) {
+
+    console.error(
+      "Erro ao recuperar identificação da tentativa:",
+      erro
+    );
+
+  }
+
+
+  /*
+    Se não existir, criamos automaticamente.
+  */
+
+  if (!tentativaId) {
+
+    tentativaId =
+      gerarTentativaId();
+
+
+    try {
+
+      localStorage.setItem(
+        chaveTentativa,
+        tentativaId
+      );
+
+    }
+
+    catch (erro) {
+
+      console.error(
+        "Erro ao salvar identificação da tentativa:",
+        erro
+      );
+
+    }
+
+  }
+
+
+  /*
+    Chave usada para guardar o estado
+    completo da avaliação.
+  */
+
+  chaveSessao =
+    `pas_prova_${codigoProva}_${tentativaId}`;
+
+
+  return true;
 
 }
 
@@ -320,18 +454,14 @@ async function inicializarProva() {
 
 
   /* =======================================================
-     VALIDAR TENTATIVA
+     CRIAR / RECUPERAR TENTATIVA AUTOMATICAMENTE
      ======================================================= */
 
-  if (!tentativaId) {
+  if (!prepararTentativa()) {
 
     alert(
-      "Sessão da avaliação inválida. Entre novamente pelo início."
+      "Não foi possível iniciar a tentativa."
     );
-
-
-    window.location.href =
-      "./index.html";
 
 
     return;
@@ -502,11 +632,10 @@ async function inicializarProva() {
 
 
       /*
-       * Estamos retornando à mesma tentativa.
-       *
-       * NÃO cria novo horário.
-       */
+        Retorno à mesma tentativa.
 
+        NÃO cria um novo horário.
+      */
 
       if (
         calcularTempoRestante()
@@ -528,8 +657,8 @@ async function inicializarProva() {
 
 
       /*
-       * Recarrega o Forms.
-       */
+        Recarrega o Forms.
+      */
 
       carregarGoogleForms();
 
@@ -538,9 +667,9 @@ async function inicializarProva() {
 
 
       /*
-       * Continua exatamente com o
-       * horário final anterior.
-       */
+        Continua exatamente do horário
+        final anteriormente salvo.
+      */
 
       iniciarCronometro();
 
@@ -557,7 +686,7 @@ async function inicializarProva() {
 
 
     /* =====================================================
-       PRIMEIRA ABERTURA DA TENTATIVA
+       PRIMEIRA ABERTURA
        ===================================================== */
 
     iniciarNovaTentativa();
@@ -667,42 +796,37 @@ function iniciarNovaTentativa() {
   });
 
 
-  atualizarContadorAlertas();
-
-
   /*
-   * O cronômetro começa antes mesmo
-   * de aguardarmos qualquer interação
-   * com o Google Forms.
-   */
+    O cronômetro começa imediatamente.
+  */
 
   iniciarCronometro();
 
 
   /*
-   * Carrega o Forms.
-   */
+    Carrega o Google Forms.
+  */
 
   carregarGoogleForms();
 
 
   /*
-   * Libera a tela.
-   */
+    Remove a tela de carregamento.
+  */
 
   esconderLoader();
 
 
   /*
-   * Ativa monitoramento.
-   */
+    Inicia monitoramento.
+  */
 
   iniciarMonitoramentoSessao();
 
 
   /*
-   * Ativa proteções da página PAS.
-   */
+    Ativa proteções.
+  */
 
   iniciarProtecoesContraCopia();
 
@@ -742,30 +866,16 @@ function carregarGoogleForms() {
   }
 
 
-  const separador =
-    link.includes("?")
-      ? "&"
-      : "?";
-
-
   /*
-   * Identificador exclusivo da tentativa.
-   */
+    Mantemos o link original do Google Forms.
 
-  const urlForms =
-    link
-    +
-    separador
-    +
-    "pas_tentativa="
-    +
-    encodeURIComponent(
-      tentativaId
-    );
-
+    Não tentamos acessar internamente o conteúdo
+    do iframe porque Google Forms pertence a
+    outro domínio.
+  */
 
   elIframe.src =
-    urlForms;
+    link;
 
 }
 
@@ -983,8 +1093,8 @@ function iniciarMonitoramentoSessao() {
 
 
       /*
-       * A página ficou invisível.
-       */
+        Página ficou invisível.
+      */
 
       if (
         document.hidden
@@ -1000,11 +1110,11 @@ function iniciarMonitoramentoSessao() {
 
 
       /*
-       * A mesma página voltou a ficar visível.
-       *
-       * Isso diferencia uma troca real de aba
-       * de um simples F5.
-       */
+        A página voltou a ficar visível.
+
+        Isso evita contar um simples F5
+        como nova saída.
+      */
 
       if (
         paginaFicouOculta
@@ -1026,7 +1136,7 @@ function iniciarMonitoramentoSessao() {
 
 
 /* =========================================================
-   REGISTRAR SAÍDA DE TELA
+   REGISTRAR SAÍDA
    ========================================================= */
 
 function registrarSaidaDeTela() {
@@ -1395,6 +1505,9 @@ async function salvarLogViolacao(
 
         codigoProva:
           codigoProva,
+
+        tentativaId:
+          tentativaId,
 
         tipoViolacao:
           tipo,
