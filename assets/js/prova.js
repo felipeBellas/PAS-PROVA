@@ -1067,22 +1067,20 @@ async function iniciarNovaTentativa() {
 
 /* =========================================================
    GOOGLE FORMS
-   ETAPA 3B
+   ETAPA 3B — CORREÇÃO DO IFRAME
 
-   Abre o Google Forms preenchendo automaticamente
-   o campo PAS-ID com o ID da tentativa atual.
+   - mantém PAS-ID automático
+   - utiliza modo incorporado do Google Forms
+   - preserva a interação com os campos
    ========================================================= */
 
 function carregarGoogleForms() {
 
   if (
-    !elIframe
-    ||
+    !elIframe ||
     !dadosProvaAtual
   ) {
-
     return;
-
   }
 
 
@@ -1097,29 +1095,18 @@ function carregarGoogleForms() {
     );
 
     return;
-
   }
 
 
   try {
 
-    /*
-      Cria uma URL válida a partir do link
-      cadastrado pelo professor.
-    */
-
     const urlForms =
-      new URL(
-        linkOriginal
-      );
+      new URL(linkOriginal);
 
 
-    /*
-      Campo PAS-ID do formulário de teste.
-
-      PAS-ID:
-      entry.26043389
-    */
+    /* =====================================================
+       PAS-ID
+       ===================================================== */
 
     urlForms.searchParams.set(
       "entry.26043389",
@@ -1127,9 +1114,9 @@ function carregarGoogleForms() {
     );
 
 
-    /*
-      Mantém indicação de preenchimento prévio.
-    */
+    /* =====================================================
+       PREFILL
+       ===================================================== */
 
     urlForms.searchParams.set(
       "usp",
@@ -1137,16 +1124,48 @@ function carregarGoogleForms() {
     );
 
 
-    /*
-      Abre o Google Forms dentro do PAS.
-    */
+    /* =====================================================
+       MODO INCORPORADO
+       ===================================================== */
+
+    urlForms.searchParams.set(
+      "embedded",
+      "true"
+    );
+
+
+    /* =====================================================
+       CONFIGURAÇÃO DO IFRAME
+       ===================================================== */
+
+    elIframe.removeAttribute(
+      "sandbox"
+    );
+
+    elIframe.style.pointerEvents =
+      "auto";
+
+    elIframe.style.userSelect =
+      "auto";
+
+    elIframe.style.webkitUserSelect =
+      "auto";
+
+
+    /* =====================================================
+       CARREGAR FORMULÁRIO
+       ===================================================== */
 
     elIframe.src =
       urlForms.toString();
 
 
     console.log(
-      "Google Forms carregado para a tentativa:",
+      "Google Forms carregado."
+    );
+
+    console.log(
+      "Tentativa:",
       tentativaId
     );
 
@@ -1160,12 +1179,9 @@ function carregarGoogleForms() {
     );
 
 
-    /*
-      Segurança:
-      se houver algum problema ao manipular
-      o endereço, ainda tentamos carregar
-      o link original.
-    */
+    elIframe.style.pointerEvents =
+      "auto";
+
 
     elIframe.src =
       linkOriginal;
@@ -1173,7 +1189,6 @@ function carregarGoogleForms() {
   }
 
 }
-
 
 /* =========================================================
    TEMPO
