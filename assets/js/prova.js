@@ -574,6 +574,253 @@ async function atualizarTentativaFirestore(
 
 }
 
+/* =========================================================
+   PAS-PROVA
+   ESCUTA EM TEMPO REAL DO ENVIO DO GOOGLE FORMS
+   ========================================================= */
+
+function iniciarEscutaTentativa() {
+
+  if (!tentativaId) {
+    console.warn(
+      "PAS-PROVA: tentativa ainda não disponível para escuta."
+    );
+    return;
+  }
+
+  if (cancelarEscutaTentativa) {
+    return;
+  }
+
+  const refTentativa =
+    doc(db, "tentativas", tentativaId);
+
+
+  cancelarEscutaTentativa =
+    onSnapshot(
+
+      refTentativa,
+
+      (snapshot) => {
+
+        if (!snapshot.exists()) {
+          return;
+        }
+
+        const dados =
+          snapshot.data();
+
+
+        console.log(
+          "PAS-PROVA: status da tentativa:",
+          dados.status
+        );
+
+
+        if (
+          dados.status === "enviada" &&
+          !provaEncerrada
+        ) {
+
+          finalizarProvaEnviada(dados);
+
+        }
+
+      },
+
+      (erro) => {
+
+        console.error(
+          "PAS-PROVA: erro ao acompanhar tentativa:",
+          erro
+        );
+
+      }
+
+    );
+
+}
+
+
+/* =========================================================
+   ENCERRAMENTO APÓS ENVIO DO GOOGLE FORMS
+   ========================================================= */
+
+function finalizarProvaEnviada(dados = {}) {
+
+  if (provaEncerrada) {
+    return;
+  }
+
+
+  console.log(
+    "PAS-PROVA: envio confirmado pelo Google Forms."
+  );
+
+
+  provaEncerrada = true;
+
+
+  /* -------------------------------------------------------
+     PARAR CRONÔMETRO
+     ------------------------------------------------------- */
+
+  if (intervalId) {
+
+    clearInterval(intervalId);
+
+    intervalId = null;
+
+  }
+
+
+  /* -------------------------------------------------------
+     PARAR ESCUTA
+     ------------------------------------------------------- */
+
+  if (cancelarEscutaTentativa) {
+
+    cancelarEscutaTentativa();
+
+    cancelarEscutaTentativa = null;
+
+  }
+
+
+  /* -------------------------------------------------------
+     SALVAR ESTADO LOCAL
+     ------------------------------------------------------- */
+
+  salvarSessao({
+
+    iniciada: true,
+
+    encerrada: true,
+
+    status: "enviada",
+
+    motivoEncerramento:
+      dados.motivoEncerramento ||
+      "Resposta enviada pelo Google Forms.",
+
+    encerradaEm:
+      dados.encerradaEm ||
+      new Date().toISOString()
+
+  });
+
+
+  /* -------------------------------------------------------
+     REMOVER GOOGLE FORMS
+     ------------------------------------------------------- */
+
+  const containerForms =
+    document.getElementById(
+      "container-forms"
+    );
+
+
+  if (containerForms) {
+
+    containerForms.innerHTML = "";
+
+  }
+
+
+  /* -------------------------------------------------------
+     EXIBIR TELA FINAL
+     ------------------------------------------------------- */
+
+  mostrarProvaEnviada();
+
+}
+
+
+/* =========================================================
+   TELA DE PROVA ENVIADA
+   ========================================================= */
+
+function mostrarProvaEnviada() {
+
+  const containerForms =
+    document.getElementById(
+      "container-forms"
+    );
+
+
+  if (!containerForms) {
+    return;
+  }
+
+
+  containerForms.innerHTML = `
+
+    <div
+      style="
+        min-height: 70vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      "
+    >
+
+      <div
+        style="
+          width: 100%;
+          max-width: 520px;
+          text-align: center;
+          background: #ffffff;
+          border-radius: 16px;
+          padding: 42px 28px;
+          box-shadow:
+            0 12px 35px
+            rgba(0,0,0,0.25);
+        "
+      >
+
+        <div
+          style="
+            font-size: 64px;
+            margin-bottom: 18px;
+          "
+        >
+          ✓
+        </div>
+
+
+        <h2
+          style="
+            margin: 0 0 12px;
+            font-size: 28px;
+            font-weight: 700;
+            color: #111827;
+          "
+        >
+          Prova enviada com sucesso
+        </h2>
+
+
+        <p
+          style="
+            margin: 0;
+            font-size: 17px;
+            line-height: 1.5;
+            color: #4b5563;
+          "
+        >
+          Sua resposta foi registrada.
+          <br>
+          Avaliação encerrada.
+        </p>
+
+      </div>
+
+    </div>
+
+  `;
+
+}
 
 /* =========================================================
    INICIALIZAR
