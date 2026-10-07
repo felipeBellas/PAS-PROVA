@@ -1601,7 +1601,946 @@ if (btnAtualizarLista) {
 
 }
 
+/* =========================================================
+   COPIAR LINK DE APLICAÇÃO
+   ========================================================= */
 
+async function copiarLinkAplicacao(prova) {
+
+  const codigo =
+    normalizarCodigo(
+      prova.codigo || ""
+    );
+
+
+  if (!codigo) {
+
+    alert(
+      "Esta prova não possui código de aplicação."
+    );
+
+    return;
+  }
+
+
+  const link =
+    new URL(
+      `./prova.html?codigo=${encodeURIComponent(codigo)}`,
+      window.location.href
+    ).href;
+
+
+  try {
+
+    await navigator.clipboard.writeText(
+      link
+    );
+
+
+    alert(
+      "Link da prova copiado!\n\n" +
+      link
+    );
+
+  }
+
+  catch (erro) {
+
+    console.warn(
+      "Clipboard indisponível:",
+      erro
+    );
+
+
+    window.prompt(
+      "Copie o link da prova:",
+      link
+    );
+
+  }
+
+}
+
+
+
+/* =========================================================
+   ABRIR ACOMPANHAMENTO
+   ========================================================= */
+
+function abrirAcompanhamento(prova) {
+
+  if (!modalAcompanhamento) {
+
+    alert(
+      "O painel de acompanhamento não foi encontrado."
+    );
+
+    return;
+  }
+
+
+  provaEmAcompanhamento =
+    prova;
+
+
+  if (acompanhamentoTitulo) {
+
+    acompanhamentoTitulo.textContent =
+      prova.titulo ||
+      "Avaliação";
+
+  }
+
+
+  if (acompanhamentoInfo) {
+
+    acompanhamentoInfo.textContent =
+      `${prova.turma || ""} • Código: ${prova.codigo || ""}`;
+
+  }
+
+
+  modalAcompanhamento.classList.remove(
+    "hidden"
+  );
+
+
+  iniciarEscutaTentativas(
+    prova
+  );
+
+}
+
+
+
+/* =========================================================
+   ESCUTAR TENTATIVAS EM TEMPO REAL
+   ========================================================= */
+
+function iniciarEscutaTentativas(prova) {
+
+  if (
+    !prova ||
+    !prova.id
+  ) {
+
+    return;
+  }
+
+
+  /* -------------------------------------------------------
+     CANCELAR ESCUTA ANTERIOR
+     ------------------------------------------------------- */
+
+  if (cancelarEscutaAcompanhamento) {
+
+    cancelarEscutaAcompanhamento();
+
+    cancelarEscutaAcompanhamento =
+      null;
+
+  }
+
+
+  /* -------------------------------------------------------
+     MOSTRAR CARREGAMENTO
+     ------------------------------------------------------- */
+
+  if (listaTentativas) {
+
+    listaTentativas.innerHTML =
+      `
+        <tr>
+
+          <td
+            colspan="5"
+            class="
+              p-6
+              text-center
+              text-slate-500
+            "
+          >
+            Carregando tentativas...
+          </td>
+
+        </tr>
+      `;
+
+  }
+
+
+  /* -------------------------------------------------------
+     CONSULTA
+     ------------------------------------------------------- */
+
+  const consulta =
+    query(
+
+      collection(
+        db,
+        "tentativas"
+      ),
+
+      where(
+        "provaId",
+        "==",
+        prova.id
+      )
+
+    );
+
+
+  /* -------------------------------------------------------
+     TEMPO REAL
+     ------------------------------------------------------- */
+
+  cancelarEscutaAcompanhamento =
+    onSnapshot(
+
+      consulta,
+
+      (snapshot) => {
+
+        const tentativas = [];
+
+
+        snapshot.forEach(
+          (documento) => {
+
+            tentativas.push({
+
+              id:
+                documento.id,
+
+              ...documento.data()
+
+            });
+
+          }
+        );
+
+
+        renderizarTentativas(
+          tentativas
+        );
+
+      },
+
+
+      (erro) => {
+
+        console.error(
+          "Erro ao acompanhar tentativas:",
+          erro
+        );
+
+
+        if (listaTentativas) {
+
+          listaTentativas.innerHTML =
+            `
+              <tr>
+
+                <td
+                  colspan="5"
+                  class="
+                    p-6
+                    text-center
+                    text-red-400
+                  "
+                >
+                  Não foi possível carregar as tentativas.
+                  <br>
+                  ${escaparHTML(erro.message)}
+                </td>
+
+              </tr>
+            `;
+
+        }
+
+      }
+
+    );
+
+}
+
+
+
+/* =========================================================
+   RENDERIZAR TENTATIVAS
+   ========================================================= */
+
+function renderizarTentativas(tentativas) {
+
+  const total =
+    tentativas.length;
+
+
+  const emAndamento =
+    tentativas.filter(
+      (item) =>
+        item.status ===
+        "em_andamento"
+    ).length;
+
+
+  const enviadas =
+    tentativas.filter(
+      (item) =>
+        item.status ===
+        "enviada"
+    ).length;
+
+
+  const tempoEsgotado =
+    tentativas.filter(
+      (item) =>
+        item.status ===
+        "tempo_esgotado"
+    ).length;
+
+
+  const outrasEncerradas =
+    tentativas.filter(
+      (item) => {
+
+        return (
+
+          item.status !==
+            "em_andamento" &&
+
+          item.status !==
+            "enviada" &&
+
+          item.status !==
+            "tempo_esgotado"
+
+        );
+
+      }
+    ).length;
+
+
+  const totalAlertas =
+    tentativas.reduce(
+      (soma, item) => {
+
+        return (
+          soma +
+          Number(
+            item.contadorAlertas ||
+            0
+          )
+        );
+
+      },
+      0
+    );
+
+
+  /* -------------------------------------------------------
+     ATUALIZAR CONTADORES
+     ------------------------------------------------------- */
+
+  if (resumoTotal) {
+
+    resumoTotal.textContent =
+      String(total);
+
+  }
+
+
+  if (resumoAndamento) {
+
+    resumoAndamento.textContent =
+      String(emAndamento);
+
+  }
+
+
+  if (resumoEnviadas) {
+
+    resumoEnviadas.textContent =
+      String(enviadas);
+
+  }
+
+
+  if (resumoTempo) {
+
+    resumoTempo.textContent =
+      String(tempoEsgotado);
+
+  }
+
+
+  if (resumoEncerradas) {
+
+    resumoEncerradas.textContent =
+      String(outrasEncerradas);
+
+  }
+
+
+  if (resumoAlertas) {
+
+    resumoAlertas.textContent =
+      String(totalAlertas);
+
+  }
+
+
+  /* -------------------------------------------------------
+     NENHUMA TENTATIVA
+     ------------------------------------------------------- */
+
+  if (tentativas.length === 0) {
+
+    if (listaTentativas) {
+
+      listaTentativas.innerHTML =
+        `
+          <tr>
+
+            <td
+              colspan="5"
+              class="
+                p-6
+                text-center
+                text-slate-500
+              "
+            >
+              Nenhuma tentativa registrada nesta prova.
+            </td>
+
+          </tr>
+        `;
+
+    }
+
+
+    return;
+  }
+
+
+  /* -------------------------------------------------------
+     ORDENAR
+
+     Mais recentes primeiro.
+     ------------------------------------------------------- */
+
+  tentativas.sort(
+    (a, b) => {
+
+      const dataA =
+        obterTimestamp(
+          a.iniciadaEm
+        );
+
+
+      const dataB =
+        obterTimestamp(
+          b.iniciadaEm
+        );
+
+
+      return (
+        dataB -
+        dataA
+      );
+
+    }
+  );
+
+
+  /* -------------------------------------------------------
+     CONSTRUIR LINHAS
+     ------------------------------------------------------- */
+
+  if (listaTentativas) {
+
+    listaTentativas.innerHTML =
+      tentativas.map(
+        (item) => {
+
+          const tentativaId =
+            escaparHTML(
+
+              item.tentativaId ||
+              item.id ||
+              "—"
+
+            );
+
+
+          const status =
+            formatarStatusTentativa(
+              item.status
+            );
+
+
+          const inicio =
+            formatarDataHoraTentativa(
+              item.iniciadaEm
+            );
+
+
+          const encerramento =
+            formatarDataHoraTentativa(
+              item.encerradaEm
+            );
+
+
+          const alertas =
+            Number(
+              item.contadorAlertas ||
+              0
+            );
+
+
+          return `
+            <tr
+              class="
+                hover:bg-slate-800/60
+                transition
+              "
+            >
+
+              <td
+                class="
+                  p-3
+                  font-mono
+                  text-xs
+                  text-slate-300
+                  whitespace-nowrap
+                "
+              >
+                ${tentativaId}
+              </td>
+
+
+              <td class="p-3">
+
+                ${criarBadgeStatus(
+                  item.status,
+                  status
+                )}
+
+              </td>
+
+
+              <td
+                class="
+                  p-3
+                  text-slate-400
+                  whitespace-nowrap
+                "
+              >
+                ${escaparHTML(inicio)}
+              </td>
+
+
+              <td
+                class="
+                  p-3
+                  text-slate-400
+                  whitespace-nowrap
+                "
+              >
+                ${escaparHTML(encerramento)}
+              </td>
+
+
+              <td
+                class="
+                  p-3
+                  text-center
+                  font-bold
+                  ${
+                    alertas > 0
+                      ? "text-red-400"
+                      : "text-slate-500"
+                  }
+                "
+              >
+                ${alertas}
+              </td>
+
+            </tr>
+          `;
+
+        }
+      ).join("");
+
+  }
+
+}
+
+
+
+/* =========================================================
+   BADGE DE STATUS
+   ========================================================= */
+
+function criarBadgeStatus(
+  status,
+  texto
+) {
+
+  let classes =
+    `
+      bg-slate-700
+      text-slate-200
+    `;
+
+
+  if (
+    status ===
+    "em_andamento"
+  ) {
+
+    classes =
+      `
+        bg-blue-950
+        text-blue-300
+        border
+        border-blue-800
+      `;
+
+  }
+
+
+  else if (
+    status ===
+    "enviada"
+  ) {
+
+    classes =
+      `
+        bg-emerald-950
+        text-emerald-300
+        border
+        border-emerald-800
+      `;
+
+  }
+
+
+  else if (
+    status ===
+    "tempo_esgotado"
+  ) {
+
+    classes =
+      `
+        bg-amber-950
+        text-amber-300
+        border
+        border-amber-800
+      `;
+
+  }
+
+
+  else {
+
+    classes =
+      `
+        bg-red-950
+        text-red-300
+        border
+        border-red-800
+      `;
+
+  }
+
+
+  return `
+    <span
+      class="
+        inline-flex
+        px-2
+        py-1
+        rounded
+        text-xs
+        font-bold
+        ${classes}
+      "
+    >
+      ${escaparHTML(texto)}
+    </span>
+  `;
+
+}
+
+
+
+/* =========================================================
+   FORMATAR STATUS
+   ========================================================= */
+
+function formatarStatusTentativa(
+  status = ""
+) {
+
+  const mapa = {
+
+    em_andamento:
+      "Em andamento",
+
+    enviada:
+      "Enviada",
+
+    tempo_esgotado:
+      "Tempo esgotado",
+
+    limite_saidas:
+      "Limite de saídas",
+
+    encerrada:
+      "Encerrada"
+
+  };
+
+
+  return (
+    mapa[status] ||
+    status ||
+    "Sem status"
+  );
+
+}
+
+
+
+/* =========================================================
+   CONVERTER DATA PARA TIMESTAMP
+   ========================================================= */
+
+function obterTimestamp(valor) {
+
+  if (!valor) {
+
+    return 0;
+
+  }
+
+
+  /* Timestamp do Firestore */
+
+  if (
+    typeof valor === "object" &&
+    typeof valor.toDate === "function"
+  ) {
+
+    return valor
+      .toDate()
+      .getTime();
+
+  }
+
+
+  /* Número */
+
+  if (
+    typeof valor === "number"
+  ) {
+
+    return valor;
+
+  }
+
+
+  /* ISO / string */
+
+  const data =
+    new Date(valor);
+
+
+  if (
+    Number.isNaN(
+      data.getTime()
+    )
+  ) {
+
+    return 0;
+
+  }
+
+
+  return data.getTime();
+
+}
+
+
+
+/* =========================================================
+   FORMATAR DATA/HORA
+   ========================================================= */
+
+function formatarDataHoraTentativa(
+  valor
+) {
+
+  if (!valor) {
+
+    return "—";
+
+  }
+
+
+  let data;
+
+
+  if (
+    typeof valor === "object" &&
+    typeof valor.toDate === "function"
+  ) {
+
+    data =
+      valor.toDate();
+
+  }
+
+
+  else {
+
+    data =
+      new Date(valor);
+
+  }
+
+
+  if (
+    Number.isNaN(
+      data.getTime()
+    )
+  ) {
+
+    return "—";
+
+  }
+
+
+  return data.toLocaleString(
+    "pt-BR",
+    {
+
+      dateStyle:
+        "short",
+
+      timeStyle:
+        "medium"
+
+    }
+  );
+
+}
+
+
+
+/* =========================================================
+   FECHAR ACOMPANHAMENTO
+   ========================================================= */
+
+function fecharAcompanhamento() {
+
+  if (cancelarEscutaAcompanhamento) {
+
+    cancelarEscutaAcompanhamento();
+
+    cancelarEscutaAcompanhamento =
+      null;
+
+  }
+
+
+  provaEmAcompanhamento =
+    null;
+
+
+  if (modalAcompanhamento) {
+
+    modalAcompanhamento.classList.add(
+      "hidden"
+    );
+
+  }
+
+}
+
+
+
+/* =========================================================
+   BOTÃO FECHAR
+   ========================================================= */
+
+if (btnFecharAcompanhamento) {
+
+  btnFecharAcompanhamento.addEventListener(
+    "click",
+    () => {
+
+      fecharAcompanhamento();
+
+    }
+  );
+
+}
+
+
+
+/* =========================================================
+   BOTÃO ATUALIZAR
+   ========================================================= */
+
+if (btnAtualizarAcompanhamento) {
+
+  btnAtualizarAcompanhamento.addEventListener(
+    "click",
+    () => {
+
+      if (
+        provaEmAcompanhamento
+      ) {
+
+        iniciarEscutaTentativas(
+          provaEmAcompanhamento
+        );
+
+      }
+
+    }
+  );
+
+}
+
+
+
+/* =========================================================
+   FECHAR AO CLICAR FORA DA JANELA
+   ========================================================= */
+
+if (modalAcompanhamento) {
+
+  modalAcompanhamento.addEventListener(
+    "click",
+    (event) => {
+
+      if (
+        event.target ===
+        modalAcompanhamento
+      ) {
+
+        fecharAcompanhamento();
+
+      }
+
+    }
+  );
+
+}
 /* =========================================================
    INICIALIZAÇÃO
    ========================================================= */
