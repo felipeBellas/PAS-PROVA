@@ -16,9 +16,11 @@ import {
   getDoc,
   doc,
   updateDoc,
-  deleteDoc
+  deleteDoc,
+  query,
+  where,
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
 
 import {
   onAuthStateChanged,
@@ -66,6 +68,69 @@ const btnGerenciarUsuarios =
 const conteudoPainel =
   document.getElementById('conteudo-painel');
 
+/* =========================================================
+   ELEMENTOS — ACOMPANHAMENTO
+   ========================================================= */
+
+const modalAcompanhamento =
+  document.getElementById(
+    'modal-acompanhamento'
+  );
+
+const acompanhamentoTitulo =
+  document.getElementById(
+    'acompanhamento-titulo'
+  );
+
+const acompanhamentoInfo =
+  document.getElementById(
+    'acompanhamento-info'
+  );
+
+const listaTentativas =
+  document.getElementById(
+    'lista-tentativas'
+  );
+
+const btnFecharAcompanhamento =
+  document.getElementById(
+    'btn-fechar-acompanhamento'
+  );
+
+const btnAtualizarAcompanhamento =
+  document.getElementById(
+    'btn-atualizar-acompanhamento'
+  );
+
+const resumoTotal =
+  document.getElementById(
+    'resumo-total'
+  );
+
+const resumoAndamento =
+  document.getElementById(
+    'resumo-andamento'
+  );
+
+const resumoEnviadas =
+  document.getElementById(
+    'resumo-enviadas'
+  );
+
+const resumoTempo =
+  document.getElementById(
+    'resumo-tempo'
+  );
+
+const resumoEncerradas =
+  document.getElementById(
+    'resumo-encerradas'
+  );
+
+const resumoAlertas =
+  document.getElementById(
+    'resumo-alertas'
+  );
 
 /* =========================================================
    CONTROLE
@@ -73,6 +138,14 @@ const conteudoPainel =
 
 let provasCarregadas = [];
 
+
+/* =========================================================
+   CONTROLE DO ACOMPANHAMENTO
+   ========================================================= */
+
+let cancelarEscutaAcompanhamento = null;
+
+let provaEmAcompanhamento = null;
 
 /* =========================================================
    AUTENTICAÇÃO E PERFIL
