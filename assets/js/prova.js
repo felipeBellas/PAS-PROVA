@@ -28,7 +28,8 @@ import {
   doc,
   getDoc,
   setDoc,
-  updateDoc
+  updateDoc,
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 
@@ -101,6 +102,8 @@ let horarioFim = null;
 let provaIniciada = false;
 
 let provaEncerrada = false;
+
+let cancelarEscutaTentativa = null;
 
 let monitoramentoIniciado = false;
 
