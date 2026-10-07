@@ -1867,313 +1867,306 @@ function iniciarEscutaTentativas(prova) {
 
 
 
-/* =========================================================
-   RENDERIZAR TENTATIVAS
-   ========================================================= */
 
 function renderizarTentativas(tentativas) {
 
-  const total =
-    tentativas.length;
+  // CONTADORES DO ACOMPANHAMENTO
 
+  const total = tentativas.length;
 
-  const emAndamento =
-    tentativas.filter(
-      (item) =>
-        item.status ===
-        "em_andamento"
-    ).length;
+  const emAndamento = tentativas.filter(
+    t => t.status === "em_andamento"
+  ).length;
 
+  const enviadas = tentativas.filter(
+    t => t.status === "enviada"
+  ).length;
 
-  const enviadas =
-    tentativas.filter(
-      (item) =>
-        item.status ===
-        "enviada"
-    ).length;
+  const tempoEsgotado = tentativas.filter(
+    t => t.status === "tempo_esgotado"
+  ).length;
 
+  const outrasEncerradas = tentativas.filter(
+    t => ![
+      "em_andamento",
+      "enviada",
+      "tempo_esgotado"
+    ].includes(t.status)
+  ).length;
 
-  const tempoEsgotado =
-    tentativas.filter(
-      (item) =>
-        item.status ===
-        "tempo_esgotado"
-    ).length;
-
-
-  const outrasEncerradas =
-    tentativas.filter(
-      (item) => {
-
-        return (
-
-          item.status !==
-            "em_andamento" &&
-
-          item.status !==
-            "enviada" &&
-
-          item.status !==
-            "tempo_esgotado"
-
-        );
-
-      }
-    ).length;
-
-
-  const totalAlertas =
-    tentativas.reduce(
-      (soma, item) => {
-
-        return (
-          soma +
-          Number(
-            item.contadorAlertas ||
-            0
-          )
-        );
-
-      },
-      0
-    );
-
-
-  /* -------------------------------------------------------
-     ATUALIZAR CONTADORES
-     ------------------------------------------------------- */
+  const totalAlertas = tentativas.reduce(
+    (soma, t) => soma + (Number(t.contadorAlertas) || 0),
+    0
+  );
 
   if (resumoTotal) {
-
-    resumoTotal.textContent =
-      String(total);
-
+    resumoTotal.textContent = String(total);
   }
-
 
   if (resumoAndamento) {
-
-    resumoAndamento.textContent =
-      String(emAndamento);
-
+    resumoAndamento.textContent = String(emAndamento);
   }
-
 
   if (resumoEnviadas) {
-
-    resumoEnviadas.textContent =
-      String(enviadas);
-
+    resumoEnviadas.textContent = String(enviadas);
   }
-
 
   if (resumoTempo) {
-
-    resumoTempo.textContent =
-      String(tempoEsgotado);
-
+    resumoTempo.textContent = String(tempoEsgotado);
   }
-
 
   if (resumoEncerradas) {
-
-    resumoEncerradas.textContent =
-      String(outrasEncerradas);
-
+    resumoEncerradas.textContent = String(outrasEncerradas);
   }
-
 
   if (resumoAlertas) {
+    resumoAlertas.textContent = String(totalAlertas);
+  }
 
-    resumoAlertas.textContent =
-      String(totalAlertas);
+
+  // PAINEL DE RESULTADOS DOS ALUNOS
+
+  let painelResultados = document.getElementById(
+    "pas-painel-resultados"
+  );
+
+  if (
+    !painelResultados &&
+    listaTentativas &&
+    modalAcompanhamento
+  ) {
+
+    painelResultados = document.createElement("section");
+
+    painelResultados.id = "pas-painel-resultados";
+
+    painelResultados.className =
+      "mt-5 mb-5 rounded-lg border border-slate-700 bg-slate-900 p-4";
+
+    const tabelaMonitoramento =
+      listaTentativas.closest("table");
+
+    const alvo =
+      tabelaMonitoramento?.parentElement || listaTentativas;
+
+    alvo.parentElement.insertBefore(
+      painelResultados,
+      alvo
+    );
+  }
+
+
+  if (painelResultados) {
+
+    // SOMENTE PROVAS ENVIADAS
+    // ORDEM ALFABÉTICA PELO NOME
+
+    const resultados = tentativas
+      .filter(t => t.status === "enviada")
+      .sort((a, b) => {
+
+        const nomeA = String(
+          a.nome || a.nomeAluno || ""
+        );
+
+        const nomeB = String(
+          b.nome || b.nomeAluno || ""
+        );
+
+        return nomeA.localeCompare(
+          nomeB,
+          "pt-BR",
+          { sensitivity: "base" }
+        ) || (
+          obterTimestamp(a.encerradaEm) -
+          obterTimestamp(b.encerradaEm)
+        );
+
+      });
+
+
+    const linhas = resultados.map(t => {
+
+      const nome = String(
+        t.nome || t.nomeAluno || ""
+      ).trim();
+
+      const turma = String(
+        t.turma || ""
+      ).trim();
+
+      const notaBruta = t.nota;
+
+      const temNota =
+        notaBruta !== undefined &&
+        notaBruta !== null &&
+        notaBruta !== "" &&
+        Number.isFinite(Number(notaBruta));
+
+      const nota = temNota
+        ? Number(notaBruta).toLocaleString(
+            "pt-BR",
+            { maximumFractionDigits: 2 }
+          )
+        : "Aguardando correção";
+
+
+      return `
+        <tr class="border-t border-slate-700">
+
+          <td class="p-3 text-slate-100">
+            ${escaparHTML(nome || "Não informado")}
+          </td>
+
+          <td class="p-3 text-slate-300">
+            ${escaparHTML(turma || "—")}
+          </td>
+
+          <td class="p-3 text-right text-slate-100">
+            ${escaparHTML(nota)}
+          </td>
+
+        </tr>
+      `;
+
+    }).join("");
+
+
+    painelResultados.innerHTML = `
+
+      <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+
+        <h3 class="text-lg font-bold text-white">
+          Resultados dos alunos — A a Z
+        </h3>
+
+        <span class="text-sm text-slate-400">
+          ${resultados.length} prova(s) enviada(s)
+        </span>
+
+      </div>
+
+      <div class="overflow-x-auto">
+
+        <table class="w-full text-left text-sm">
+
+          <thead class="bg-slate-800 text-slate-200">
+
+            <tr>
+              <th class="p-3">Nome do aluno</th>
+              <th class="p-3">Turma</th>
+              <th class="p-3 text-right">Nota</th>
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            ${
+              linhas ||
+              `<tr>
+                <td colspan="3"
+                    class="p-4 text-center text-slate-400">
+                  Nenhuma prova enviada até o momento.
+                </td>
+              </tr>`
+            }
+
+          </tbody>
+
+        </table>
+
+      </div>
+    `;
 
   }
 
 
-  /* -------------------------------------------------------
-     NENHUMA TENTATIVA
-     ------------------------------------------------------- */
+  // MANTER MONITORAMENTO ORIGINAL
+
+  if (!listaTentativas) {
+    return;
+  }
 
   if (tentativas.length === 0) {
 
-    if (listaTentativas) {
-
-      listaTentativas.innerHTML =
-        `
-          <tr>
-
-            <td
-              colspan="5"
-              class="
-                p-6
-                text-center
-                text-slate-500
-              "
-            >
-              Nenhuma tentativa registrada nesta prova.
-            </td>
-
-          </tr>
-        `;
-
-    }
-
+    listaTentativas.innerHTML = `
+      <tr>
+        <td colspan="5"
+            class="p-6 text-center text-slate-500">
+          Nenhuma tentativa registrada nesta prova.
+        </td>
+      </tr>
+    `;
 
     return;
   }
 
 
-  /* -------------------------------------------------------
-     ORDENAR
-
-     Mais recentes primeiro.
-     ------------------------------------------------------- */
+  // TENTATIVAS MAIS RECENTES PRIMEIRO
 
   tentativas.sort(
-    (a, b) => {
-
-      const dataA =
-        obterTimestamp(
-          a.iniciadaEm
-        );
-
-
-      const dataB =
-        obterTimestamp(
-          b.iniciadaEm
-        );
-
-
-      return (
-        dataB -
-        dataA
-      );
-
-    }
+    (a, b) =>
+      obterTimestamp(b.iniciadaEm) -
+      obterTimestamp(a.iniciadaEm)
   );
 
 
-  /* -------------------------------------------------------
-     CONSTRUIR LINHAS
-     ------------------------------------------------------- */
+  listaTentativas.innerHTML = tentativas.map(item => {
 
-  if (listaTentativas) {
+    const tentativaId = escaparHTML(
+      item.tentativaId || item.id || "—"
+    );
 
-    listaTentativas.innerHTML =
-      tentativas.map(
-        (item) => {
+    const status = formatarStatusTentativa(
+      item.status
+    );
 
-          const tentativaId =
-            escaparHTML(
+    const inicio = formatarDataHoraTentativa(
+      item.iniciadaEm
+    );
 
-              item.tentativaId ||
-              item.id ||
-              "—"
+    const encerramento = formatarDataHoraTentativa(
+      item.encerradaEm
+    );
 
-            );
-
-
-          const status =
-            formatarStatusTentativa(
-              item.status
-            );
+    const alertas = Number(
+      item.contadorAlertas
+    ) || 0;
 
 
-          const inicio =
-            formatarDataHoraTentativa(
-              item.iniciadaEm
-            );
+    return `
 
+      <tr class="hover:bg-slate-800/60 transition">
 
-          const encerramento =
-            formatarDataHoraTentativa(
-              item.encerradaEm
-            );
+        <td class="p-3 font-mono text-xs text-slate-300 whitespace-nowrap">
+          ${tentativaId}
+        </td>
 
+        <td class="p-3">
+          ${criarBadgeStatus(item.status, status)}
+        </td>
 
-          const alertas =
-            Number(
-              item.contadorAlertas ||
-              0
-            );
+        <td class="p-3 text-slate-400 whitespace-nowrap">
+          ${escaparHTML(inicio)}
+        </td>
 
+        <td class="p-3 text-slate-400 whitespace-nowrap">
+          ${escaparHTML(encerramento)}
+        </td>
 
-          return `
-            <tr
-              class="
-                hover:bg-slate-800/60
-                transition
-              "
-            >
+        <td class="p-3 text-center font-bold ${
+          alertas > 0
+            ? "text-red-400"
+            : "text-slate-500"
+        }">
+          ${alertas}
+        </td>
 
-              <td
-                class="
-                  p-3
-                  font-mono
-                  text-xs
-                  text-slate-300
-                  whitespace-nowrap
-                "
-              >
-                ${tentativaId}
-              </td>
+      </tr>
+    `;
 
-
-              <td class="p-3">
-
-                ${criarBadgeStatus(
-                  item.status,
-                  status
-                )}
-
-              </td>
-
-
-              <td
-                class="
-                  p-3
-                  text-slate-400
-                  whitespace-nowrap
-                "
-              >
-                ${escaparHTML(inicio)}
-              </td>
-
-
-              <td
-                class="
-                  p-3
-                  text-slate-400
-                  whitespace-nowrap
-                "
-              >
-                ${escaparHTML(encerramento)}
-              </td>
-
-
-              <td
-                class="
-                  p-3
-                  text-center
-                  font-bold
-                  ${
-                    alertas > 0
-                      ? "text-red-400"
-                      : "text-slate-500"
-                  }
-                "
-              >
-                ${alertas}
-              </td>
-
-            </tr>
-          `;
-
-        }
-      ).join("");
-
-  }
+  }).join("");
 
 }
 
