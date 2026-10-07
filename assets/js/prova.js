@@ -1067,6 +1067,10 @@ async function iniciarNovaTentativa() {
 
 /* =========================================================
    GOOGLE FORMS
+   ETAPA 3B
+
+   Abre o Google Forms preenchendo automaticamente
+   o campo PAS-ID com o ID da tentativa atual.
    ========================================================= */
 
 function carregarGoogleForms() {
@@ -1082,24 +1086,91 @@ function carregarGoogleForms() {
   }
 
 
-  const link =
+  const linkOriginal =
     dadosProvaAtual.linkForms;
 
 
-  if (!link) {
+  if (!linkOriginal) {
 
     console.error(
       "Link do Google Forms não encontrado."
     );
-
 
     return;
 
   }
 
 
-  elIframe.src =
-    link;
+  try {
+
+    /*
+      Cria uma URL válida a partir do link
+      cadastrado pelo professor.
+    */
+
+    const urlForms =
+      new URL(
+        linkOriginal
+      );
+
+
+    /*
+      Campo PAS-ID do formulário de teste.
+
+      PAS-ID:
+      entry.26043389
+    */
+
+    urlForms.searchParams.set(
+      "entry.26043389",
+      tentativaId
+    );
+
+
+    /*
+      Mantém indicação de preenchimento prévio.
+    */
+
+    urlForms.searchParams.set(
+      "usp",
+      "pp_url"
+    );
+
+
+    /*
+      Abre o Google Forms dentro do PAS.
+    */
+
+    elIframe.src =
+      urlForms.toString();
+
+
+    console.log(
+      "Google Forms carregado para a tentativa:",
+      tentativaId
+    );
+
+  }
+
+  catch (erro) {
+
+    console.error(
+      "Erro ao preparar Google Forms:",
+      erro
+    );
+
+
+    /*
+      Segurança:
+      se houver algum problema ao manipular
+      o endereço, ainda tentamos carregar
+      o link original.
+    */
+
+    elIframe.src =
+      linkOriginal;
+
+  }
 
 }
 
