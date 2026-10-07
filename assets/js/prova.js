@@ -1280,6 +1280,7 @@ async function iniciarNovaTentativa() {
   try {
 
     await criarTentativaFirestore();
+    iniciarEscutaTentativa();
 
   }
 
