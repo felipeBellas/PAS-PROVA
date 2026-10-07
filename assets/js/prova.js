@@ -1318,130 +1318,129 @@ async function iniciarNovaTentativa() {
 }
 
 
-/* =========================================================
-   GOOGLE FORMS
-   ETAPA 3B — CORREÇÃO DO IFRAME
 
-   - mantém PAS-ID automático
-   - utiliza modo incorporado do Google Forms
-   - preserva a interação com os campos
+/* =========================================================
+   PAS-PROVA — GOOGLE FORMS
+   PAS-ID DINÂMICO POR FORMULÁRIO
    ========================================================= */
 
 function carregarGoogleForms() {
 
-  if (
-    !elIframe ||
-    !dadosProvaAtual
-  ) {
+  if (!elIframe || !dadosProvaAtual) {
     return;
   }
 
-
-  const linkOriginal =
-    dadosProvaAtual.linkForms;
-
+  const linkOriginal = dadosProvaAtual.linkForms;
 
   if (!linkOriginal) {
-
     console.error(
-      "Link do Google Forms não encontrado."
+      "PAS-PROVA: link do formulário não encontrado."
     );
-
     return;
   }
-
 
   try {
 
-    const urlForms =
-      new URL(linkOriginal);
+    const urlForms = new URL(linkOriginal);
 
+    // Identificador próprio do formulário,
+    // armazenado no documento da prova no Firestore.
+    const entryPas = String(
+      dadosProvaAtual.entryPas ||
+      dadosProvaAtual.pasIdEntry ||
+      ""
+    ).trim();
 
-    /* =====================================================
-       PAS-ID
-       ===================================================== */
+    // Não utilizar o identificador fixo antigo.
+    urlForms.searchParams.delete("entry.26043389");
 
+    if (!/^entry\.\d+$/.test(entryPas)) {
+
+      console.error(
+        "PAS-PROVA: formulário sem entryPas válido.",
+        {
+          codigoProva,
+          provaId,
+          entryPas
+        }
+      );
+
+      if (elLoader) {
+        elLoader.classList.add("hidden");
+      }
+
+      const container = document.getElementById(
+        "container-forms"
+      );
+
+      if (container) {
+        container.innerHTML = `
+          <div style="
+            padding: 32px;
+            text-align: center;
+            color: #f8fafc;
+          ">
+            <h2>Formulário não configurado</h2>
+            <p>
+              O PAS-ID deste formulário ainda não
+              está vinculado à prova.
+            </p>
+            <p>
+              Solicite ao professor que conclua
+              a integração do formulário.
+            </p>
+          </div>
+        `;
+      }
+
+      return;
+    }
+
+    // Preenchimento automático do PAS-ID.
     urlForms.searchParams.set(
-      "entry.26043389",
+      entryPas,
       tentativaId
     );
-
-
-    /* =====================================================
-       PREFILL
-       ===================================================== */
 
     urlForms.searchParams.set(
       "usp",
       "pp_url"
     );
 
-
-    /* =====================================================
-       MODO INCORPORADO
-       ===================================================== */
-
     urlForms.searchParams.set(
       "embedded",
       "true"
     );
 
+    // Preservar interação com o Google Forms.
+    elIframe.removeAttribute("sandbox");
 
-    /* =====================================================
-       CONFIGURAÇÃO DO IFRAME
-       ===================================================== */
+    elIframe.style.pointerEvents = "auto";
+    elIframe.style.userSelect = "auto";
+    elIframe.style.webkitUserSelect = "auto";
 
-    elIframe.removeAttribute(
-      "sandbox"
-    );
-
-    elIframe.style.pointerEvents =
-      "auto";
-
-    elIframe.style.userSelect =
-      "auto";
-
-    elIframe.style.webkitUserSelect =
-      "auto";
-
-
-    /* =====================================================
-       CARREGAR FORMULÁRIO
-       ===================================================== */
-
-    elIframe.src =
-      urlForms.toString();
-
+    elIframe.src = urlForms.toString();
 
     console.log(
-      "Google Forms carregado."
+      "PAS-PROVA: formulário carregado.",
+      {
+        codigoProva,
+        tentativaId,
+        entryPas
+      }
     );
 
-    console.log(
-      "Tentativa:",
-      tentativaId
-    );
-
-  }
-
-  catch (erro) {
+  } catch (erro) {
 
     console.error(
-      "Erro ao preparar Google Forms:",
+      "PAS-PROVA: erro ao carregar formulário:",
       erro
     );
-
-
-    elIframe.style.pointerEvents =
-      "auto";
-
-
-    elIframe.src =
-      linkOriginal;
 
   }
 
 }
+
 
 /* =========================================================
    TEMPO
