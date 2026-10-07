@@ -1158,6 +1158,8 @@ async function inicializarProva() {
 
       }
 
+      iniciarEscutaTentativa();
+
 
       carregarGoogleForms();
 
