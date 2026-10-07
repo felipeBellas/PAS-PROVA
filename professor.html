@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
+
   <meta charset="UTF-8">
 
   <meta
@@ -11,19 +13,26 @@
   <title>Painel do Professor</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
-  
+
 </head>
+
 
 <body class="bg-slate-900 text-slate-100 p-6">
 
-  <div
-  id="conteudo-painel"
-  class="hidden max-w-5xl mx-auto space-y-8"
->
 
-    <!-- =====================================================
+  <!-- =====================================================
+       PAINEL PRINCIPAL
+       ===================================================== -->
+
+  <div
+    id="conteudo-painel"
+    class="hidden max-w-5xl mx-auto space-y-8"
+  >
+
+
+    <!-- ===================================================
          CABEÇALHO
-         ===================================================== -->
+         =================================================== -->
 
     <header
       class="
@@ -35,7 +44,9 @@
         pb-4
       "
     >
+
       <div>
+
         <h1 class="text-2xl font-bold text-blue-500">
           Painel do Professor
         </h1>
@@ -43,66 +54,63 @@
         <p class="text-xs text-slate-500 mt-1">
           PAS-PROVA
         </p>
+
       </div>
 
-     <div
-  class="
-    flex
-    items-center
-    gap-3
-  "
->
 
-  <!-- ===============================================
-       GERENCIAR USUÁRIOS
-       Visível somente para administrador.
-       O JavaScript removerá "hidden" posteriormente.
-       =============================================== -->
+      <div
+        class="
+          flex
+          items-center
+          gap-3
+        "
+      >
 
-  <button
-    id="btn-gerenciar-usuarios"
-    type="button"
-    class="
-      hidden
-      bg-blue-600
-      hover:bg-blue-500
-      text-white
-      text-xs
-      font-bold
-      px-4
-      py-2
-      rounded
-      transition
-    "
-  >
-    Gerenciar Usuários
-  </button>
+        <!-- GERENCIAR USUÁRIOS -->
+
+        <button
+          id="btn-gerenciar-usuarios"
+          type="button"
+          class="
+            hidden
+            bg-blue-600
+            hover:bg-blue-500
+            text-white
+            text-xs
+            font-bold
+            px-4
+            py-2
+            rounded
+            transition
+          "
+        >
+          Gerenciar Usuários
+        </button>
 
 
-  <!-- ===============================================
-       SAIR
-       =============================================== -->
+        <!-- SAIR -->
 
-  <button
-    id="btn-sair-professor"
-    type="button"
-    class="
-      text-sm
-      text-slate-400
-      hover:text-white
-    "
-  >
-    Sair
-  </button>
+        <button
+          id="btn-sair-professor"
+          type="button"
+          class="
+            text-sm
+            text-slate-400
+            hover:text-white
+          "
+        >
+          Sair
+        </button>
 
-</div>
-      
+      </div>
+
     </header>
 
 
-    <!-- =====================================================
+
+    <!-- ===================================================
          CADASTRO / EDIÇÃO DA PROVA
-         ===================================================== -->
+         =================================================== -->
 
     <div
       class="
@@ -113,6 +121,7 @@
         border-slate-700
       "
     >
+
 
       <div
         class="
@@ -130,6 +139,7 @@
         >
           Cadastrar Nova Prova
         </h2>
+
 
         <button
           id="btn-cancelar-edicao"
@@ -151,6 +161,7 @@
       </div>
 
 
+
       <form
         id="form-criar-prova"
         class="
@@ -161,12 +172,15 @@
         "
       >
 
-        <!-- ID interno usado durante edição -->
+
+        <!-- ID INTERNO -->
+
         <input
           type="hidden"
           id="prova-id"
           value=""
         >
+
 
 
         <!-- TÍTULO -->
@@ -203,6 +217,7 @@
         </div>
 
 
+
         <!-- TURMA -->
 
         <div>
@@ -237,6 +252,7 @@
         </div>
 
 
+
         <!-- GOOGLE FORMS -->
 
         <div class="md:col-span-2">
@@ -269,6 +285,7 @@
           >
 
         </div>
+
 
 
         <!-- CÓDIGO -->
@@ -307,6 +324,7 @@
         </div>
 
 
+
         <!-- DURAÇÃO -->
 
         <div>
@@ -340,6 +358,7 @@
           >
 
         </div>
+
 
 
         <!-- SAÍDAS -->
@@ -377,6 +396,7 @@
         </div>
 
 
+
         <!-- SALVAR -->
 
         <div class="md:col-span-2">
@@ -405,9 +425,10 @@
     </div>
 
 
-    <!-- =====================================================
+
+    <!-- ===================================================
          PROVAS CADASTRADAS
-         ===================================================== -->
+         =================================================== -->
 
     <div
       class="
@@ -431,6 +452,7 @@
         <h2 class="text-xl font-bold text-slate-200">
           Provas Cadastradas
         </h2>
+
 
         <button
           id="btn-atualizar-lista"
@@ -467,6 +489,453 @@
   </div>
 
 
+
+  <!-- =====================================================
+       MODAL — ACOMPANHAMENTO DA PROVA
+       ===================================================== -->
+
+  <div
+    id="modal-acompanhamento"
+    class="
+      hidden
+      fixed
+      inset-0
+      z-50
+      bg-black/80
+      overflow-y-auto
+      p-4
+      md:p-8
+    "
+  >
+
+    <div
+      class="
+        max-w-6xl
+        mx-auto
+        bg-slate-900
+        border
+        border-slate-700
+        rounded-xl
+        shadow-2xl
+        overflow-hidden
+      "
+    >
+
+
+      <!-- CABEÇALHO DO MODAL -->
+
+      <div
+        class="
+          flex
+          justify-between
+          items-start
+          gap-4
+          p-5
+          border-b
+          border-slate-700
+          bg-slate-800
+        "
+      >
+
+        <div>
+
+          <p
+            class="
+              text-xs
+              text-blue-400
+              font-bold
+              uppercase
+              tracking-wide
+            "
+          >
+            Acompanhamento
+          </p>
+
+          <h2
+            id="acompanhamento-titulo"
+            class="
+              text-xl
+              font-bold
+              text-white
+              mt-1
+            "
+          >
+            Avaliação
+          </h2>
+
+          <p
+            id="acompanhamento-info"
+            class="
+              text-sm
+              text-slate-400
+              mt-1
+            "
+          >
+          </p>
+
+        </div>
+
+
+        <button
+          id="btn-fechar-acompanhamento"
+          type="button"
+          class="
+            bg-slate-700
+            hover:bg-slate-600
+            text-white
+            px-4
+            py-2
+            rounded
+            text-sm
+            font-bold
+          "
+        >
+          Fechar
+        </button>
+
+      </div>
+
+
+
+      <!-- CONTEÚDO -->
+
+      <div class="p-5 space-y-6">
+
+
+        <!-- RESUMO -->
+
+        <div
+          class="
+            grid
+            grid-cols-2
+            md:grid-cols-3
+            lg:grid-cols-6
+            gap-3
+          "
+        >
+
+
+          <div
+            class="
+              bg-slate-800
+              border
+              border-slate-700
+              rounded-lg
+              p-4
+            "
+          >
+
+            <p class="text-xs text-slate-400">
+              Tentativas
+            </p>
+
+            <p
+              id="resumo-total"
+              class="
+                text-2xl
+                font-bold
+                text-white
+                mt-1
+              "
+            >
+              0
+            </p>
+
+          </div>
+
+
+
+          <div
+            class="
+              bg-slate-800
+              border
+              border-blue-900
+              rounded-lg
+              p-4
+            "
+          >
+
+            <p class="text-xs text-slate-400">
+              Em andamento
+            </p>
+
+            <p
+              id="resumo-andamento"
+              class="
+                text-2xl
+                font-bold
+                text-blue-400
+                mt-1
+              "
+            >
+              0
+            </p>
+
+          </div>
+
+
+
+          <div
+            class="
+              bg-slate-800
+              border
+              border-emerald-900
+              rounded-lg
+              p-4
+            "
+          >
+
+            <p class="text-xs text-slate-400">
+              Enviadas
+            </p>
+
+            <p
+              id="resumo-enviadas"
+              class="
+                text-2xl
+                font-bold
+                text-emerald-400
+                mt-1
+              "
+            >
+              0
+            </p>
+
+          </div>
+
+
+
+          <div
+            class="
+              bg-slate-800
+              border
+              border-amber-900
+              rounded-lg
+              p-4
+            "
+          >
+
+            <p class="text-xs text-slate-400">
+              Tempo esgotado
+            </p>
+
+            <p
+              id="resumo-tempo"
+              class="
+                text-2xl
+                font-bold
+                text-amber-400
+                mt-1
+              "
+            >
+              0
+            </p>
+
+          </div>
+
+
+
+          <div
+            class="
+              bg-slate-800
+              border
+              border-red-900
+              rounded-lg
+              p-4
+            "
+          >
+
+            <p class="text-xs text-slate-400">
+              Outras encerradas
+            </p>
+
+            <p
+              id="resumo-encerradas"
+              class="
+                text-2xl
+                font-bold
+                text-red-400
+                mt-1
+              "
+            >
+              0
+            </p>
+
+          </div>
+
+
+
+          <div
+            class="
+              bg-slate-800
+              border
+              border-purple-900
+              rounded-lg
+              p-4
+            "
+          >
+
+            <p class="text-xs text-slate-400">
+              Alertas
+            </p>
+
+            <p
+              id="resumo-alertas"
+              class="
+                text-2xl
+                font-bold
+                text-purple-400
+                mt-1
+              "
+            >
+              0
+            </p>
+
+          </div>
+
+        </div>
+
+
+
+        <!-- BARRA DE AÇÕES -->
+
+        <div
+          class="
+            flex
+            flex-col
+            md:flex-row
+            md:items-center
+            justify-between
+            gap-3
+          "
+        >
+
+          <div>
+
+            <p class="text-sm text-slate-300">
+              Tentativas registradas no PAS-PROVA
+            </p>
+
+            <p class="text-xs text-slate-500">
+              O painel será atualizado durante a aplicação.
+            </p>
+
+          </div>
+
+
+          <button
+            id="btn-atualizar-acompanhamento"
+            type="button"
+            class="
+              bg-blue-600
+              hover:bg-blue-500
+              text-white
+              text-xs
+              font-bold
+              px-4
+              py-2
+              rounded
+            "
+          >
+            Atualizar agora
+          </button>
+
+        </div>
+
+
+
+        <!-- TABELA -->
+
+        <div
+          class="
+            overflow-x-auto
+            border
+            border-slate-700
+            rounded-lg
+          "
+        >
+
+          <table
+            class="
+              w-full
+              text-sm
+              text-left
+            "
+          >
+
+            <thead
+              class="
+                bg-slate-800
+                text-slate-400
+                text-xs
+                uppercase
+              "
+            >
+
+              <tr>
+
+                <th class="p-3">
+                  PAS-ID
+                </th>
+
+                <th class="p-3">
+                  Status
+                </th>
+
+                <th class="p-3">
+                  Início
+                </th>
+
+                <th class="p-3">
+                  Encerramento
+                </th>
+
+                <th class="p-3 text-center">
+                  Alertas
+                </th>
+
+              </tr>
+
+            </thead>
+
+
+            <tbody
+              id="lista-tentativas"
+              class="
+                divide-y
+                divide-slate-800
+              "
+            >
+
+              <tr>
+
+                <td
+                  colspan="5"
+                  class="
+                    p-6
+                    text-center
+                    text-slate-500
+                  "
+                >
+                  Selecione uma prova para acompanhar.
+                </td>
+
+              </tr>
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
   <!-- =====================================================
        JAVASCRIPT
        ===================================================== -->
@@ -476,5 +945,7 @@
     src="./assets/js/professor.js"
   ></script>
 
+
 </body>
+
 </html>
