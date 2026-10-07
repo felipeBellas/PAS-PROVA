@@ -1129,6 +1129,43 @@ async function carregarProvas() {
                   Editar
                 </button>
 
+                                <button
+                  type="button"
+                  data-acao="copiar-link"
+                  data-id="${prova.id}"
+                  class="
+                    bg-blue-600
+                    hover:bg-blue-500
+                    text-white
+                    text-xs
+                    font-bold
+                    px-4
+                    py-2
+                    rounded
+                  "
+                >
+                  Copiar link
+                </button>
+
+
+                <button
+                  type="button"
+                  data-acao="acompanhar"
+                  data-id="${prova.id}"
+                  class="
+                    bg-emerald-700
+                    hover:bg-emerald-600
+                    text-white
+                    text-xs
+                    font-bold
+                    px-4
+                    py-2
+                    rounded
+                  "
+                >
+                  Acompanhar
+                </button>
+
 
                 <a
                   href="./prova.html?codigo=${encodeURIComponent(
@@ -1249,6 +1286,33 @@ if (listaProvas) {
 
         return;
 
+      }
+
+             /* =====================================================
+         COPIAR LINK DE APLICAÇÃO
+         ===================================================== */
+
+      if (acao === "copiar-link") {
+
+        await copiarLinkAplicacao(
+          prova
+        );
+
+        return;
+      }
+
+
+      /* =====================================================
+         ACOMPANHAR TENTATIVAS
+         ===================================================== */
+
+      if (acao === "acompanhar") {
+
+        abrirAcompanhamento(
+          prova
+        );
+
+        return;
       }
 
 
