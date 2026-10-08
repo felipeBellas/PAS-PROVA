@@ -2132,127 +2132,121 @@ async function encerrarProva(
 }
 
 
+
 /* =========================================================
-   TELA FINAL
+   PAS-PROVA — TELA FINAL DE ENCERRAMENTO
+   TEMPO ESGOTADO / LIMITE DE SAÍDAS
    ========================================================= */
 
-function mostrarProvaEncerrada(
-  motivo
-) {
+function mostrarProvaEncerrada(motivo) {
 
-  provaEncerrada =
-    true;
-
+  provaEncerrada = true;
 
   if (elCronometro) {
-
-    elCronometro.innerText =
-      "00:00";
-
+    elCronometro.innerText = "00:00";
   }
-
 
   const containerForms =
-    document.getElementById(
-      "container-forms"
-    );
-
+    document.getElementById("container-forms");
 
   if (!containerForms) {
-
     return;
-
   }
 
+  const mensagem = String(
+    motivo || "Esta tentativa foi encerrada."
+  );
 
   containerForms.innerHTML = `
-
-    <div
-      class="
-        flex
-        flex-col
-        items-center
-        justify-center
-        min-h-[calc(100vh-65px)]
-        p-8
-        text-center
-        space-y-4
-        bg-slate-950
+    <section
+      style="
+        min-height: calc(100vh - 65px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8fafc;
+        padding: 24px;
       "
     >
-
       <div
-        class="
-          w-16
-          h-16
-          rounded-full
-          bg-red-950
-          border
-          border-red-800
-          flex
-          items-center
-          justify-center
+        style="
+          width: 100%;
+          max-width: 560px;
+          padding: 40px 28px;
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 18px;
+          text-align: center;
+          box-shadow: 0 12px 35px rgba(15,23,42,0.06);
         "
       >
-
-        <span class="text-3xl">
+        <div
+          style="
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: #fee2e2;
+            font-size: 34px;
+          "
+          aria-hidden="true"
+        >
           🔒
-        </span>
+        </div>
 
+        <h2
+          style="
+            margin: 0 0 18px;
+            color: #991b1b;
+            font-size: 29px;
+            font-weight: 700;
+          "
+        >
+          Prova encerrada
+        </h2>
+
+        <p
+          style="
+            margin: 0 0 20px;
+            color: #334155;
+            font-size: 18px;
+            font-weight: 600;
+            line-height: 1.5;
+          "
+        >
+          ${escapeHtml(mensagem)}
+        </p>
+
+        <p
+          style="
+            margin: 0;
+            color: #64748b;
+            font-size: 15px;
+            line-height: 1.7;
+          "
+        >
+          Esta tentativa foi finalizada.
+          Não é possível continuar ou reiniciar
+          esta avaliação.
+        </p>
+
+        <div
+          style="
+            margin-top: 26px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            color: #64748b;
+            font-size: 14px;
+          "
+        >
+          Procure seu professor caso precise
+          de orientação.
+        </div>
       </div>
-
-
-      <h2
-        class="
-          text-3xl
-          font-bold
-          text-red-500
-        "
-      >
-        Prova Encerrada
-      </h2>
-
-
-      <p
-        class="
-          text-slate-300
-          max-w-md
-        "
-      >
-        ${escapeHtml(motivo)}
-      </p>
-
-
-      <p
-        class="
-          text-sm
-          text-slate-500
-          max-w-md
-        "
-      >
-        Esta tentativa foi finalizada.
-        Atualizar a página não reiniciará
-        a avaliação.
-      </p>
-
-
-      <a
-        href="./index.html"
-        class="
-          bg-blue-600
-          hover:bg-blue-500
-          px-6
-          py-3
-          rounded-lg
-          text-white
-          font-semibold
-        "
-      >
-        Voltar ao Início
-      </a>
-
-    </div>
-
+    </section>
   `;
 
 }
