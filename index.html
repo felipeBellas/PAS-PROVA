@@ -14,6 +14,114 @@
   <title>PAS PROVA</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
+  
+<style>
+  /* ============================================
+     PAS-PROVA — PÁGINA INICIAL CLARA
+     IDENTIDADE VERDE-PETRÓLEO
+     ============================================ */
+
+  body {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+  }
+
+  /* Título principal */
+  main > div:first-child h1 {
+    color: #365a50 !important;
+  }
+
+  main > div:first-child p {
+    color: #64748b !important;
+  }
+
+  /* Painel central */
+  main > section {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 20px !important;
+    padding: 44px 28px !important;
+    text-align: center;
+    box-shadow: 0 12px 35px rgba(15, 23, 42, 0.06);
+  }
+
+  /* Ocultar formulário antigo */
+  #form-acesso,
+  #mensagem,
+  main > section > h2,
+  main > section > div:first-of-type {
+    display: none !important;
+  }
+
+  /* Mensagem de boas-vindas */
+  main > section::before {
+    content: "Bem-vindo ao PAS-PROVA";
+    display: block;
+    color: #0f172a;
+    font-size: 23px;
+    font-weight: 700;
+    margin-bottom: 18px;
+  }
+
+  main > section::after {
+    content: "Para realizar uma avaliação, utilize o link fornecido pelo professor. Antes de iniciar, acesse sua conta Google.";
+    display: block;
+    max-width: 380px;
+    margin: 0 auto;
+    color: #475569;
+    font-size: 15px;
+    line-height: 1.8;
+  }
+
+  /* Área do professor */
+  main > div.text-center.mt-6 a {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 52px;
+    padding: 14px 20px;
+    background: #365a50 !important;
+    color: #ffffff !important;
+    border-radius: 12px;
+    font-size: 16px !important;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 5px 14px rgba(54, 90, 80, 0.20);
+    transition: background 0.2s, transform 0.2s;
+  }
+
+  main > div.text-center.mt-6 a:hover {
+    background: #29463d !important;
+    transform: translateY(-1px);
+  }
+
+  main > div.text-center.mt-6 a:focus-visible {
+    outline: 3px solid #a9c5b8;
+    outline-offset: 3px;
+  }
+
+  /* Rodapé */
+  main > footer {
+    color: #94a3b8 !important;
+  }
+
+  /* Responsividade */
+  @media (max-width: 480px) {
+    main > section {
+      padding: 34px 20px !important;
+    }
+
+    main > section::before {
+      font-size: 20px;
+    }
+
+    main > section::after {
+      font-size: 14px;
+    }
+  }
+</style>
+
 </head>
 
 <body
