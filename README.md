@@ -1,6 +1,6 @@
 #PAS-PROVA
 
-#Plataforma de Avaliação Digital
+#Plataforma de Avaliação Supervisionada
 
 O PAS-PROVA é uma plataforma educacional desenvolvida para auxiliar professores na criação, aplicação e acompanhamento de avaliações digitais.
 
