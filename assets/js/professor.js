@@ -474,6 +474,55 @@ if (!idAtual) {
   dadosProva.integracaoPas = "pendente";
 }
 
+       
+/* =========================================================
+   PAS-PROVA — LINK DE EDIÇÃO DO GOOGLE FORMS
+   ========================================================= */
+
+const campoLinkEdicao = document.getElementById(
+  "link-edicao-forms"
+);
+
+const linkEdicaoForms = String(
+  campoLinkEdicao?.value || ""
+).trim();
+
+if (linkEdicaoForms) {
+
+  let urlEdicao;
+
+  try {
+    urlEdicao = new URL(linkEdicaoForms);
+  } catch (erro) {
+    alert("Informe um link de edição válido.");
+    return;
+  }
+
+  if (
+    urlEdicao.hostname !== "docs.google.com" ||
+    !/^\/forms\/d\/[^/]+\/edit\/?$/.test(
+      urlEdicao.pathname
+    )
+  ) {
+    alert(
+      "Informe o endereço de edição do Google Forms, terminado em /edit."
+    );
+    return;
+  }
+
+  dadosProva.linkEdicaoForms = urlEdicao.origin +
+    urlEdicao.pathname.replace(/\/$/, "");
+
+} else if (!idAtual) {
+
+  alert(
+    "Informe o link de edição do Google Forms."
+  );
+
+  return;
+
+}
+
 
       /* -----------------------------------------------------
          VALIDAÇÕES
