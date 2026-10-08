@@ -2366,22 +2366,25 @@ function renderizarTentativas(tentativas) {
 
         <table class="w-full text-left text-sm">
 
-          <thead class="bg-slate-800 text-slate-200">
+          
+<thead class="bg-slate-800 text-slate-200">
 
-            <tr>
-              <th class="p-3">Nome do aluno</th>
-              <th class="p-3">Turma</th>
-              <th class="p-3 text-right">Nota</th>
-            </tr>
+  <tr>
+    <th class="p-3">Nome do aluno</th>
+    <th class="p-3">Turma</th>
+    <th class="p-3 text-right">Nota</th>
+    <th class="p-3 text-center">Ação</th>
+  </tr>
 
-          </thead>
+</thead>
+
 
           <tbody>
 
             ${
               linhas ||
               `<tr>
-                <td colspan="3"
+                <td colspan="4"
                     class="p-4 text-center text-slate-400">
                   Nenhuma prova enviada até o momento.
                 </td>
@@ -2486,6 +2489,50 @@ function renderizarTentativas(tentativas) {
 
 }
 
+
+/* =========================================================
+   PAS-PROVA — BOTÃO EXCLUIR RESULTADO INDIVIDUAL
+   ========================================================= */
+
+if (modalAcompanhamento) {
+
+  modalAcompanhamento.addEventListener(
+    "click",
+    async (evento) => {
+
+      const botao = evento.target.closest(
+        "button[data-excluir-resultado]"
+      );
+
+      if (!botao || botao.disabled) {
+        return;
+      }
+
+      const tentativaId =
+        botao.dataset.excluirResultado;
+
+      if (!tentativaId) {
+        return;
+      }
+
+      botao.disabled = true;
+
+      try {
+
+        await excluirResultadoAluno(tentativaId);
+
+      } finally {
+
+        if (botao.isConnected) {
+          botao.disabled = false;
+        }
+
+      }
+
+    }
+  );
+
+}
 
 
 /* =========================================================
