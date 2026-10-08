@@ -427,45 +427,52 @@ if (formCriar) {
          DADOS BÁSICOS DA PROVA
          ----------------------------------------------------- */
 
-      const dadosProva = {
+     
+const dadosProva = {
 
-        titulo:
-          document.getElementById(
-            'titulo-prova'
-          ).value.trim(),
+  titulo:
+    document.getElementById(
+      "titulo-prova"
+    ).value.trim(),
 
-        turma:
-          document.getElementById(
-            'turma-disciplina'
-          ).value.trim(),
+  turma:
+    document.getElementById(
+      "turma-disciplina"
+    ).value.trim(),
 
-        linkForms:
-          document.getElementById(
-            'link-forms'
-          ).value.trim(),
+  linkForms:
+    document.getElementById(
+      "link-forms"
+    ).value.trim(),
 
-        codigo: codigo,
+  codigo: codigo,
 
-        duracao:
-          parseInt(
-            document.getElementById(
-              'duracao-minutos'
-            ).value,
-            10
-          ),
+  duracao:
+    parseInt(
+      document.getElementById(
+        "duracao-minutos"
+      ).value,
+      10
+    ),
 
-        limiteSaidas:
-          parseInt(
-            document.getElementById(
-              'limite-saidas'
-            ).value,
-            10
-          ),
+  limiteSaidas:
+    parseInt(
+      document.getElementById(
+        "limite-saidas"
+      ).value,
+      10
+    ),
 
-        atualizadoEm:
-          new Date().toISOString()
+  atualizadoEm:
+    new Date().toISOString()
 
-      };
+};
+
+// Somente avaliações novas começam aguardando integração.
+// Na edição, preservamos o estado já existente.
+if (!idAtual) {
+  dadosProva.integracaoPas = "pendente";
+}
 
 
       /* -----------------------------------------------------
