@@ -14,6 +14,299 @@
 
   <script src="https://cdn.tailwindcss.com"></script>
 
+<style>
+/* =====================================================
+   PAS-PROVA — PAINEL DO PROFESSOR
+   TEMA CLARO / VERDE-PETRÓLEO
+   ===================================================== */
+
+:root {
+  --pas-verde: #365a50;
+  --pas-verde-hover: #29463d;
+  --pas-fundo: #f1f5f9;
+  --pas-branco: #ffffff;
+  --pas-texto: #0f172a;
+  --pas-secundario: #64748b;
+  --pas-borda: #e2e8f0;
+}
+
+/* FUNDO GERAL */
+
+body {
+  background: var(--pas-fundo) !important;
+  color: var(--pas-texto) !important;
+}
+
+/* CABEÇALHO */
+
+#conteudo-painel > header {
+  border-color: var(--pas-borda) !important;
+}
+
+#conteudo-painel > header h1 {
+  color: var(--pas-verde) !important;
+}
+
+#conteudo-painel > header p {
+  color: var(--pas-secundario) !important;
+}
+
+/* PAINÉIS PRINCIPAIS */
+
+#conteudo-painel > div.bg-slate-800 {
+  background: var(--pas-branco) !important;
+  border-color: var(--pas-borda) !important;
+  box-shadow: 0 8px 24px rgba(15,23,42,.05);
+}
+
+/* TÍTULOS */
+
+#conteudo-painel h2 {
+  color: var(--pas-texto) !important;
+}
+
+/* RÓTULOS */
+
+#conteudo-painel label {
+  color: #475569 !important;
+}
+
+/* CAMPOS DE FORMULÁRIO */
+
+#conteudo-painel input:not([type="hidden"]),
+#conteudo-painel select,
+#conteudo-painel textarea {
+  background: #ffffff !important;
+  color: var(--pas-texto) !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+#conteudo-painel input::placeholder,
+#conteudo-painel textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+#conteudo-painel input:focus,
+#conteudo-painel select:focus,
+#conteudo-painel textarea:focus {
+  outline: 2px solid #a9c5b8;
+  outline-offset: 1px;
+  border-color: var(--pas-verde) !important;
+}
+
+/* BOTÕES PRINCIPAIS */
+
+#btn-gerenciar-usuarios,
+#btn-salvar-prova,
+#btn-atualizar-acompanhamento,
+#pas-baixar-resultados-pdf {
+  background: var(--pas-verde) !important;
+  color: white !important;
+  border-color: var(--pas-verde) !important;
+}
+
+#btn-gerenciar-usuarios:hover,
+#btn-salvar-prova:hover,
+#btn-atualizar-acompanhamento:hover,
+#pas-baixar-resultados-pdf:hover {
+  background: var(--pas-verde-hover) !important;
+}
+
+/* BOTÕES SECUNDÁRIOS */
+
+#btn-cancelar-edicao,
+#btn-atualizar-lista,
+#btn-fechar-acompanhamento {
+  background: #e2e8f0 !important;
+  color: #334155 !important;
+}
+
+#btn-cancelar-edicao:hover,
+#btn-atualizar-lista:hover,
+#btn-fechar-acompanhamento:hover {
+  background: #cbd5e1 !important;
+}
+
+/* BOTÃO SAIR */
+
+#btn-sair-professor {
+  color: #475569 !important;
+}
+
+#btn-sair-professor:hover {
+  color: var(--pas-verde) !important;
+}
+
+/* LISTA DE PROVAS */
+
+#lista-provas {
+  color: var(--pas-texto);
+}
+
+#lista-provas > * {
+  border-color: var(--pas-borda) !important;
+}
+
+#lista-provas .bg-slate-900,
+#lista-provas .bg-slate-800,
+#lista-provas .bg-slate-700 {
+  background: #f8fafc !important;
+}
+
+#lista-provas .text-white,
+#lista-provas .text-slate-100,
+#lista-provas .text-slate-200,
+#lista-provas .text-slate-300 {
+  color: var(--pas-texto) !important;
+}
+
+/* MODAL DE ACOMPANHAMENTO */
+
+#modal-acompanhamento {
+  background: rgba(15,23,42,.45) !important;
+}
+
+#modal-acompanhamento > div {
+  background: #ffffff !important;
+  border-color: var(--pas-borda) !important;
+}
+
+/* CABEÇALHO DO MODAL */
+
+#modal-acompanhamento > div > div:first-child {
+  background: #f8fafc !important;
+  border-color: var(--pas-borda) !important;
+}
+
+#acompanhamento-titulo {
+  color: var(--pas-texto) !important;
+}
+
+#acompanhamento-info {
+  color: var(--pas-secundario) !important;
+}
+
+#modal-acompanhamento .text-blue-400 {
+  color: var(--pas-verde) !important;
+}
+
+/* CARDS DE RESUMO */
+
+#modal-acompanhamento .grid > div.bg-slate-800 {
+  background: #f8fafc !important;
+  border-color: var(--pas-borda) !important;
+}
+
+#modal-acompanhamento .grid > div p:first-child {
+  color: #64748b !important;
+}
+
+#modal-acompanhamento .grid > div p.text-white {
+  color: var(--pas-texto) !important;
+}
+
+#resumo-andamento {
+  color: var(--pas-verde) !important;
+}
+
+#resumo-enviadas {
+  color: #15803d !important;
+}
+
+#resumo-tempo {
+  color: #b45309 !important;
+}
+
+#resumo-encerradas {
+  color: #b91c1c !important;
+}
+
+#resumo-alertas {
+  color: #7e22ce !important;
+}
+
+/* TABELAS */
+
+#modal-acompanhamento table {
+  background: #ffffff !important;
+  color: var(--pas-texto) !important;
+}
+
+#modal-acompanhamento thead {
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+}
+
+#modal-acompanhamento tbody {
+  color: #334155 !important;
+}
+
+#modal-acompanhamento td,
+#modal-acompanhamento th {
+  border-color: var(--pas-borda) !important;
+}
+
+#modal-acompanhamento .overflow-x-auto {
+  border-color: var(--pas-borda) !important;
+}
+
+/* PAINEL DE RESULTADOS */
+
+#pas-painel-resultados {
+  background: #ffffff !important;
+  color: var(--pas-texto) !important;
+  border-color: var(--pas-borda) !important;
+}
+
+#pas-painel-resultados .bg-slate-800,
+#pas-painel-resultados .bg-slate-900 {
+  background: #f8fafc !important;
+}
+
+#pas-painel-resultados .text-white,
+#pas-painel-resultados .text-slate-100,
+#pas-painel-resultados .text-slate-200,
+#pas-painel-resultados .text-slate-300 {
+  color: var(--pas-texto) !important;
+}
+
+/* TEXTOS AUXILIARES */
+
+#conteudo-painel .text-slate-400,
+#conteudo-painel .text-slate-500,
+#modal-acompanhamento .text-slate-400,
+#modal-acompanhamento .text-slate-500 {
+  color: var(--pas-secundario) !important;
+}
+
+/* RESPONSIVIDADE */
+
+@media (max-width: 640px) {
+
+  body {
+    padding: 14px !important;
+  }
+
+  #conteudo-painel > header {
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+
+  #conteudo-painel > div.bg-slate-800 {
+    padding: 18px !important;
+  }
+
+  #modal-acompanhamento {
+    padding: 10px !important;
+  }
+
+  #modal-acompanhamento > div > div {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}
+</style>
+
 </head>
 
 
