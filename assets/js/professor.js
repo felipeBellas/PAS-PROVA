@@ -9,6 +9,7 @@ import {
 } from './firebase-config.js';
 
 
+
 import {
   collection,
   addDoc,
@@ -19,8 +20,10 @@ import {
   deleteDoc,
   query,
   where,
-  onSnapshot
+  onSnapshot,
+  writeBatch
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
 
 import {
   onAuthStateChanged,
@@ -1581,76 +1584,201 @@ function limparFormulario() {
 }
 
 
+
 /* =========================================================
-   EXCLUIR PROVA
+   PAS-PROVA
+   EXCLUIR AVALIAÇÃO E TENTATIVAS VINCULADAS
    ========================================================= */
 
 async function excluirProva(prova) {
 
-  const confirmar =
-    window.confirm(
-      `Deseja realmente excluir a prova "${prova.titulo}"?\n\n` +
-      `Código: ${prova.codigo}\n\n` +
-      `Esta ação não poderá ser desfeita.`
-    );
+  if (
+    !usuarioAtual ||
+    !prova ||
+    !prova.id
+  ) {
+    alert("Não foi possível identificar a avaliação.");
+    return;
+  }
 
+  // Verificar autorização no painel.
+  if (
+    perfilAtual !== "administrador" &&
+    (
+      perfilAtual !== "professor" ||
+      prova.professorUid !== usuarioAtual.uid
+    )
+  ) {
+    alert("Você não possui permissão para excluir esta avaliação.");
+    return;
+  }
+
+  const confirmar = window.confirm(
+    `EXCLUIR AVALIAÇÃO\n\n` +
+    `Título: ${prova.titulo || "Sem título"}\n` +
+    `Código: ${prova.codigo || "—"}\n\n` +
+    `Também serão excluídos:\n` +
+    `• Todas as tentativas vinculadas;\n` +
+    `• Notas e resultados dessas tentativas;\n` +
+    `• Histórico de acompanhamento armazenado nas tentativas.\n\n` +
+    `O Google Forms original será preservado.\n\n` +
+    `Esta operação não poderá ser desfeita.\n\n` +
+    `Deseja continuar?`
+  );
 
   if (!confirmar) {
     return;
   }
 
-
   try {
 
-    await deleteDoc(
-      doc(
-        db,
-        "provas",
-        prova.id
-      )
+    // Confirmar que a avaliação ainda existe.
+    const referenciaProva = doc(
+      db,
+      "provas",
+      prova.id
     );
 
+    const documentoProva = await getDoc(
+      referenciaProva
+    );
 
-    /*
-      Se o professor estiver editando
-      justamente a prova excluída,
-      cancela a edição.
-    */
-
-    if (
-      provaId.value === prova.id
-    ) {
-
-      limparFormulario();
-
+    if (!documentoProva.exists()) {
+      alert("Esta avaliação já foi excluída.");
+      await carregarProvas();
+      return;
     }
 
+    const dadosAtuais = documentoProva.data();
 
-    alert(
-      "Prova excluída com sucesso!"
+    // Revalidar a propriedade antes da exclusão.
+    if (
+      perfilAtual !== "administrador" &&
+      dadosAtuais.professorUid !== usuarioAtual.uid
+    ) {
+      throw new Error(
+        "Você não possui autorização para excluir esta avaliação."
+      );
+    }
+
+    // Localizar somente as tentativas desta prova.
+    const consultaTentativas = query(
+      collection(db, "tentativas"),
+      where("provaId", "==", prova.id)
     );
 
+    const snapshotTentativas = await getDocs(
+      consultaTentativas
+    );
+
+    const referenciasTentativas = snapshotTentativas.docs.map(
+      documento => documento.ref
+    );
+
+    const quantidadeTentativas =
+      referenciasTentativas.length;
+
+    const confirmarQuantidade = window.confirm(
+      `CONFIRMAÇÃO FINAL\n\n` +
+      `Avaliação: ${prova.titulo || "Sem título"}\n` +
+      `Tentativas encontradas: ${quantidadeTentativas}\n\n` +
+      `Todos esses registros, incluindo notas e resultados, serão apagados.\n\n` +
+      `Confirmar exclusão definitiva?`
+    );
+
+    if (!confirmarQuantidade) {
+      return;
+    }
+
+    /*
+      Firestore permite até 500 gravações
+      por lote. Usamos 400 por segurança.
+
+      Para avaliações pequenas, o último lote
+      pode excluir as tentativas e a prova
+      na mesma operação.
+    */
+
+    const TAMANHO_LOTE = 400;
+
+    let excluidas = 0;
+
+    for (
+      let indice = 0;
+      indice < referenciasTentativas.length;
+      indice += TAMANHO_LOTE
+    ) {
+
+      const grupo = referenciasTentativas.slice(
+        indice,
+        indice + TAMANHO_LOTE
+      );
+
+      const lote = writeBatch(db);
+
+      grupo.forEach(referencia => {
+        lote.delete(referencia);
+      });
+
+      const ultimoGrupo =
+        indice + TAMANHO_LOTE >=
+        referenciasTentativas.length;
+
+      if (ultimoGrupo) {
+        lote.delete(referenciaProva);
+      }
+
+      await lote.commit();
+
+      excluidas += grupo.length;
+    }
+
+    // Caso não existam tentativas.
+    if (quantidadeTentativas === 0) {
+      const lote = writeBatch(db);
+      lote.delete(referenciaProva);
+      await lote.commit();
+    }
+
+    // Se a quantidade for múltipla exata
+    // de 400, o último lote já excluiu a prova.
+
+    if (
+      provaEmAcompanhamento?.id === prova.id
+    ) {
+      fecharAcompanhamento();
+    }
+
+    if (provaId?.value === prova.id) {
+      limparFormulario();
+    }
 
     await carregarProvas();
 
-  }
-
-  catch (err) {
-
-    console.error(
-      "Erro ao excluir prova:",
-      err
+    alert(
+      `Exclusão concluída!\n\n` +
+      `Avaliação: ${prova.titulo || "Sem título"}\n` +
+      `Tentativas excluídas: ${excluidas}\n\n` +
+      `Os resultados associados também foram removidos.`
     );
 
+  } catch (erro) {
+
+    console.error(
+      "PAS-PROVA — Erro na exclusão:",
+      erro
+    );
 
     alert(
-      "Erro ao excluir a prova: " +
-      err.message
+      "Não foi possível concluir a exclusão.\n\n" +
+      erro.message +
+      "\n\nConfira os registros no Firebase antes de tentar novamente."
     );
 
   }
 
 }
+
 
 
 /* =========================================================
