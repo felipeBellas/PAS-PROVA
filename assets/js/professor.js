@@ -1473,6 +1473,19 @@ function iniciarEdicao(prova) {
   ).value =
     prova.linkForms || "";
 
+/* =====================================================
+   PAS-PROVA — LINK DE EDIÇÃO DO GOOGLE FORMS
+   ===================================================== */
+
+const campoEdicaoForms = document.getElementById(
+  "link-edicao-forms"
+);
+
+if (campoEdicaoForms) {
+  campoEdicaoForms.value =
+    prova.linkEdicaoForms || "";
+}
+
 
   document.getElementById(
     'codigo-unico'
