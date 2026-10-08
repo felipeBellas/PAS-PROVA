@@ -1082,6 +1082,58 @@ async function carregarProvas() {
             prova.limiteSaidas ?? 0
           );
 
+      
+/* =====================================================
+   PAS-PROVA — STATUS DA INTEGRAÇÃO GOOGLE FORMS
+   ===================================================== */
+
+const integracaoPas = String(
+  prova.integracaoPas || ""
+).trim().toLowerCase();
+
+const entryPasValida =
+  /^entry\.\d+$/.test(
+    String(prova.entryPas || "").trim()
+  );
+
+let textoIntegracao = "Aguardando integração";
+
+let classeIntegracao =
+  "bg-amber-950 text-amber-300 border-amber-700";
+
+if (
+  integracaoPas === "configurada" &&
+  entryPasValida
+) {
+
+  textoIntegracao = "Integrada";
+
+  classeIntegracao =
+    "bg-emerald-950 text-emerald-300 border-emerald-700";
+
+} else if (
+  integracaoPas === "erro" ||
+  integracaoPas === "falha"
+) {
+
+  textoIntegracao = "Erro na integração";
+
+  classeIntegracao =
+    "bg-red-950 text-red-300 border-red-700";
+
+} else if (
+  integracaoPas === "configurada" &&
+  !entryPasValida
+) {
+
+  textoIntegracao = "Verificar integração";
+
+  classeIntegracao =
+    "bg-red-950 text-red-300 border-red-700";
+
+}
+
+
 
         item.innerHTML =
           `
@@ -1156,6 +1208,24 @@ async function carregarProvas() {
                     Saídas:
                     ${limite}
                   </span>
+
+                  
+<span
+  class="
+    inline-flex
+    items-center
+    rounded-md
+    border
+    px-2
+    py-1
+    text-xs
+    font-semibold
+    ${classeIntegracao}
+  "
+>
+  ${textoIntegracao}
+</span>
+
 
                 </div>
 
