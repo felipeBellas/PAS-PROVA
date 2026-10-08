@@ -2064,6 +2064,102 @@ function iniciarEscutaTentativas(prova) {
 
 
 
+/* =========================================================
+   PAS-PROVA — EXCLUIR RESULTADO INDIVIDUAL
+   ========================================================= */
+
+async function excluirResultadoAluno(tentativaId) {
+
+  if (
+    !usuarioAtual ||
+    !provaEmAcompanhamento?.id ||
+    !tentativaId
+  ) {
+    alert("Não foi possível identificar o resultado.");
+    return;
+  }
+
+  const prova = provaEmAcompanhamento;
+
+  if (
+    perfilAtual !== "administrador" &&
+    (
+      perfilAtual !== "professor" ||
+      prova.professorUid !== usuarioAtual.uid
+    )
+  ) {
+    alert("Você não possui permissão para excluir este resultado.");
+    return;
+  }
+
+  try {
+
+    const referencia = doc(
+      db,
+      "tentativas",
+      tentativaId
+    );
+
+    const documento = await getDoc(referencia);
+
+    if (!documento.exists()) {
+      alert("Este resultado já foi excluído.");
+      return;
+    }
+
+    const dados = documento.data();
+
+    if (dados.provaId !== prova.id) {
+      throw new Error(
+        "Esta tentativa não pertence à avaliação selecionada."
+      );
+    }
+
+    if (dados.status !== "enviada") {
+      throw new Error(
+        "Somente resultados de provas enviadas podem ser excluídos aqui."
+      );
+    }
+
+    const nome = String(
+      dados.nome || dados.nomeAluno || "Aluno não identificado"
+    );
+
+    const confirmar = window.confirm(
+      `EXCLUIR RESULTADO DO ALUNO?\n\n` +
+      `Aluno: ${nome}\n` +
+      `Avaliação: ${prova.titulo}\n\n` +
+      `A tentativa e sua nota serão removidas permanentemente.\n\n` +
+      `O Google Forms original não será alterado.\n\n` +
+      `Deseja continuar?`
+    );
+
+    if (!confirmar) return;
+
+    await deleteDoc(referencia);
+
+    alert(
+      `Resultado de ${nome} excluído com sucesso.`
+    );
+
+    // O acompanhamento será atualizado pelo onSnapshot.
+
+  } catch (erro) {
+
+    console.error(
+      "Erro ao excluir resultado:",
+      erro
+    );
+
+    alert(
+      "Não foi possível excluir o resultado:\n" +
+      erro.message
+    );
+
+  }
+
+}
+
 
 function renderizarTentativas(tentativas) {
 
@@ -2206,10 +2302,12 @@ function renderizarTentativas(tentativas) {
             { maximumFractionDigits: 2 }
           )
         : "Aguardando correção";
+       const idTentativa = escaparHTML(t.id || "");
 
 
       return `
         <tr class="border-t border-slate-700">
+        
 
           <td class="p-3 text-slate-100">
             ${escaparHTML(nome || "Não informado")}
@@ -2222,6 +2320,27 @@ function renderizarTentativas(tentativas) {
           <td class="p-3 text-right text-slate-100">
             ${escaparHTML(nota)}
           </td>
+
+          
+<td class="p-3 text-center">
+  <button
+    type="button"
+    data-excluir-resultado="${idTentativa}"
+    class="
+      bg-red-700
+      hover:bg-red-600
+      text-white
+      text-xs
+      font-bold
+      px-3
+      py-2
+      rounded
+    "
+  >
+    Excluir
+  </button>
+</td>
+
 
         </tr>
       `;
