@@ -2426,9 +2426,32 @@ function renderizarTentativas(tentativas) {
           Resultados dos alunos — A a Z
         </h3>
 
-        <span class="text-sm text-slate-400">
-          ${resultados.length} prova(s) enviada(s)
-        </span>
+        
+<div class="flex flex-wrap items-center gap-3">
+
+  <span class="text-sm text-slate-400">
+    ${resultados.length} prova(s) enviada(s)
+  </span>
+
+  <button
+    type="button"
+    id="pas-baixar-resultados-pdf"
+    class="
+      bg-blue-600
+      hover:bg-blue-500
+      text-white
+      text-xs
+      font-bold
+      px-4
+      py-2
+      rounded
+    "
+  >
+    Baixar PDF
+  </button>
+
+</div>
+
 
       </div>
 
@@ -2598,6 +2621,197 @@ if (modalAcompanhamento) {
         }
 
       }
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   PAS-PROVA — EXPORTAÇÃO DE RESULTADOS EM PDF
+   ========================================================= */
+
+if (modalAcompanhamento) {
+
+  modalAcompanhamento.addEventListener(
+    "click",
+    (evento) => {
+
+      const botao = evento.target.closest(
+        "#pas-baixar-resultados-pdf"
+      );
+
+      if (!botao) return;
+
+      const painel = document.getElementById(
+        "pas-painel-resultados"
+      );
+
+      const tabela = painel?.querySelector("table");
+
+      if (!tabela || !provaEmAcompanhamento) {
+        alert("Não foi possível localizar os resultados.");
+        return;
+      }
+
+      const linhas = Array.from(
+        tabela.querySelectorAll("tbody tr")
+      );
+
+      const dados = linhas
+        .filter(linha =>
+          linha.querySelectorAll("td").length === 4 &&
+          linha.querySelector(
+            "button[data-excluir-resultado]"
+          )
+        )
+        .map(linha => {
+          const colunas = linha.querySelectorAll("td");
+
+          return {
+            nome: colunas[0].textContent.trim(),
+            turma: colunas[1].textContent.trim(),
+            nota: colunas[2].textContent.trim()
+          };
+        });
+
+      if (dados.length === 0) {
+        alert("Não existem resultados para exportar.");
+        return;
+      }
+
+      const titulo = escaparHTML(
+        provaEmAcompanhamento.titulo || "Avaliação"
+      );
+
+      const turma = escaparHTML(
+        provaEmAcompanhamento.turma || "—"
+      );
+
+      const data = new Date().toLocaleString("pt-BR");
+
+      const linhasHTML = dados.map((aluno, indice) => `
+        <tr>
+          <td>${indice + 1}</td>
+          <td>${escaparHTML(aluno.nome)}</td>
+          <td>${escaparHTML(aluno.turma)}</td>
+          <td>${escaparHTML(aluno.nota)}</td>
+        </tr>
+      `).join("");
+
+      const janela = window.open("", "_blank");
+
+      if (!janela) {
+        alert(
+          "O navegador bloqueou a janela de impressão. " +
+          "Autorize pop-ups para este site e tente novamente."
+        );
+        return;
+      }
+
+      janela.document.open();
+
+      janela.document.write(`
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+          <meta charset="UTF-8">
+          <title>Resultados - ${titulo}</title>
+
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              color: #111827;
+              margin: 32px;
+            }
+
+            h1 {
+              font-size: 22px;
+              margin-bottom: 8px;
+            }
+
+            .info {
+              color: #475569;
+              font-size: 13px;
+              margin-bottom: 24px;
+            }
+
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              font-size: 12px;
+            }
+
+            th, td {
+              border: 1px solid #cbd5e1;
+              padding: 9px;
+              text-align: left;
+            }
+
+            th {
+              background: #e2e8f0;
+            }
+
+            tr:nth-child(even) {
+              background: #f8fafc;
+            }
+
+            @page {
+              size: A4;
+              margin: 15mm;
+            }
+
+            @media print {
+              body {
+                margin: 0;
+              }
+
+              thead {
+                display: table-header-group;
+              }
+
+              tr {
+                break-inside: avoid;
+              }
+            }
+          </style>
+        </head>
+
+        <body>
+          <h1>Relatório de resultados — PAS-PROVA</h1>
+
+          <div class="info">
+            <strong>Avaliação:</strong> ${titulo}
+            <p><strong>Turma:</strong> ${turma}</p>
+            <p><strong>Emitido em:</strong> ${data}</p>
+            <p><strong>Total de resultados:</strong> ${dados.length}</p>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Nº</th>
+                <th>Nome do aluno</th>
+                <th>Turma</th>
+                <th>Nota</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              ${linhasHTML}
+            </tbody>
+          </table>
+        </body>
+        </html>
+      `);
+
+      janela.document.close();
+      janela.focus();
+
+      janela.addEventListener("load", () => {
+        janela.print();
+      }, { once: true });
 
     }
   );
