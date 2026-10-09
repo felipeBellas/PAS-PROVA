@@ -533,9 +533,6 @@ async function criarTentativaFirestore() {
     tentativaId:
       tentativaId,
 
-    alunoUid:
-      alunoFirebaseUid,
-
     codigoProva:
       codigoProva,
 
@@ -1374,28 +1371,56 @@ async function iniciarNovaTentativa() {
      FIRESTORE
      ======================================================= */
 
-  try {
+ try {
 
-    await criarTentativaFirestore();
-    iniciarEscutaTentativa();
+  await criarTentativaFirestore();
 
+  iniciarEscutaTentativa();
+
+} catch (erro) {
+
+  console.error(
+    "PAS-PROVA: falha ao registrar tentativa:",
+    erro
+  );
+
+  provaIniciada = false;
+
+  provaEncerrada = false;
+
+  esconderLoader();
+
+  const containerForms =
+    document.getElementById("container-forms");
+
+  if (containerForms) {
+
+    containerForms.innerHTML = `
+      <div style="
+        max-width: 520px;
+        margin: 60px auto;
+        padding: 32px;
+        background: #ffffff;
+        color: #334155;
+        text-align: center;
+        border-radius: 16px;
+      ">
+        <h2>Não foi possível iniciar a avaliação</h2>
+
+        <p>
+          Não foi possível registrar sua tentativa.
+          A prova não foi iniciada.
+        </p>
+
+        <p>
+          Solicite orientação ao professor.
+        </p>
+      </div>
+    `;
   }
 
-  catch (erro) {
-
-    console.error(
-      "Não foi possível registrar a tentativa no Firestore:",
-      erro
-    );
-
-    /*
-      Não interrompemos a prova.
-
-      O armazenamento local continua preservando
-      a tentativa.
-    */
-
-  }
+  return;
+}
 
 
   iniciarCronometro();
