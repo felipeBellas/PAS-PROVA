@@ -2085,6 +2085,112 @@ function iniciarEscutaTentativas(prova) {
 }
 
 
+/* =========================================================
+   PAS-PROVA — EXCLUIR TODOS OS RESULTADOS ENVIADOS
+   Somente da avaliação selecionada
+   ========================================================= */
+
+async function excluirTodosResultadosEnviados() {
+
+  const prova = provaEmAcompanhamento;
+
+  if (!usuarioAtual || !prova?.id) {
+    alert("Nenhuma avaliação selecionada.");
+    return;
+  }
+
+  // Verificar autorização do usuário
+  if (
+    perfilAtual !== "administrador" &&
+    (
+      perfilAtual !== "professor" ||
+      prova.professorUid !== usuarioAtual.uid
+    )
+  ) {
+    alert("Você não possui permissão para excluir estes resultados.");
+    return;
+  }
+
+  try {
+
+    // Consultar somente resultados enviados desta prova
+    const consulta = query(
+      collection(db, "tentativas"),
+      where("provaId", "==", prova.id),
+      where("status", "==", "enviada")
+    );
+
+    const snapshot = await getDocs(consulta);
+
+    if (snapshot.empty) {
+      alert("Não existem resultados enviados para excluir.");
+      return;
+    }
+
+    // Confirmar antes de excluir
+    const confirmado = window.confirm(
+      `EXCLUIR TODOS OS RESULTADOS?\n\n` +
+      `Avaliação: ${prova.titulo || "Sem título"}\n` +
+      `Resultados enviados: ${snapshot.size}\n\n` +
+      `Serão excluídas as tentativas enviadas e suas notas.\n\n` +
+      `Serão preservados:\n` +
+      `• A prova cadastrada;\n` +
+      `• As tentativas em andamento;\n` +
+      `• O Google Forms original.\n\n` +
+      `Esta ação não pode ser desfeita.\n\n` +
+      `Deseja continuar?`
+    );
+
+    if (!confirmado) {
+      return;
+    }
+
+    const TAMANHO_LOTE = 400;
+    let quantidadeExcluida = 0;
+
+    // Excluir em lotes para respeitar os limites do Firestore
+    for (
+      let indice = 0;
+      indice < snapshot.docs.length;
+      indice += TAMANHO_LOTE
+    ) {
+
+      const lote = writeBatch(db);
+
+      const grupo = snapshot.docs.slice(
+        indice,
+        indice + TAMANHO_LOTE
+      );
+
+      grupo.forEach(documento => {
+        lote.delete(documento.ref);
+      });
+
+      await lote.commit();
+
+      quantidadeExcluida += grupo.length;
+    }
+
+    alert(
+      `${quantidadeExcluida} resultado(s) excluído(s) com sucesso!`
+    );
+
+    // O onSnapshot atualizará a tabela automaticamente.
+
+  } catch (erro) {
+
+    console.error(
+      "PAS-PROVA — Erro ao excluir todos os resultados:",
+      erro
+    );
+
+    alert(
+      "Não foi possível excluir todos os resultados.\n\n" +
+      erro.message
+    );
+  }
+}
+
 
 /* =========================================================
    PAS-PROVA — EXCLUIR RESULTADO INDIVIDUAL
@@ -2571,6 +2677,43 @@ function renderizarTentativas(tentativas) {
 
 }
 
+
+/* =========================================================
+   PAS-PROVA — EVENTO DO BOTÃO EXCLUIR TODOS
+   ========================================================= */
+
+if (modalAcompanhamento) {
+
+  modalAcompanhamento.addEventListener(
+    "click",
+    async (evento) => {
+
+      const botao = evento.target.closest(
+        "#pas-excluir-todos-resultados"
+      );
+
+      if (!botao || botao.disabled) {
+        return;
+      }
+
+      botao.disabled = true;
+
+      try {
+
+        await excluirTodosResultadosEnviados();
+
+      } finally {
+
+        if (botao.isConnected) {
+          botao.disabled = false;
+        }
+
+      }
+
+    }
+  );
+
+}
 
 /* =========================================================
    PAS-PROVA — BOTÃO EXCLUIR RESULTADO INDIVIDUAL
