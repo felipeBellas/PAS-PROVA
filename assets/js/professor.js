@@ -2441,6 +2441,23 @@ function renderizarTentativas(tentativas) {
         </table>
 
       </div>
+      
+<!-- EXCLUIR TODOS OS RESULTADOS -->
+
+<div class="mt-4 flex flex-wrap items-center justify-end gap-2">
+
+  <button
+    type="button"
+    id="pas-excluir-todos-resultados"
+    ${resultados.length === 0 ? "disabled" : ""}
+    title="Excluir todos os resultados enviados desta avaliação"
+    class="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-xs font-bold text-red-700 hover:bg-red-100 disabled:opacity-50"
+  >
+    🗑 Excluir todos
+  </button>
+
+</div>
+
     `;
 
   }
