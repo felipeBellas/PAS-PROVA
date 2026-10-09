@@ -528,16 +528,16 @@ async function criarTentativaFirestore() {
 
 
   await setDoc(
+  referencia,
+  {
+    tentativaId:
+      tentativaId,
 
-    referencia,
+    alunoUid:
+      alunoFirebaseUid,
 
-    {
-
-      tentativaId:
-        tentativaId,
-
-      codigoProva:
-        codigoProva,
+    codigoProva:
+      codigoProva,
 
       provaId:
         provaId,
