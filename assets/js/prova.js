@@ -16,7 +16,17 @@
    ========================================================= */
 
 
-import { db } from './firebase-config.js';
+/* =========================================================
+   PAS-PROVA
+   FIREBASE — FIRESTORE E AUTENTICAÇÃO
+   ========================================================= */
+
+import { db, auth } from './firebase-config.js';
+
+import {
+  signInAnonymously,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 
 import {
@@ -159,7 +169,86 @@ if (elInfoAluno) {
 
 }
 
+/* =========================================================
+   PAS-PROVA
+   AUTENTICAÇÃO ANÔNIMA DO ALUNO
 
+   - Não exige e-mail ou senha.
+   - Reutiliza a sessão Firebase existente.
+   - Não substitui uma conta já autenticada.
+   - Aguarda a restauração da autenticação.
+   ========================================================= */
+
+let alunoFirebaseUid = null;
+
+function aguardarAutenticacaoFirebase() {
+
+  return new Promise((resolve, reject) => {
+
+    const cancelar = onAuthStateChanged(
+      auth,
+
+      (usuario) => {
+        cancelar();
+        resolve(usuario);
+      },
+
+      (erro) => {
+        cancelar();
+        reject(erro);
+      }
+    );
+
+  });
+
+}
+
+
+async function autenticarAlunoPAS() {
+
+  try {
+
+    let usuario =
+      await aguardarAutenticacaoFirebase();
+
+    if (!usuario) {
+
+      const credencial =
+        await signInAnonymously(auth);
+
+      usuario = credencial.user;
+
+    }
+
+    if (!usuario) {
+      throw new Error(
+        "Não foi possível identificar a sessão Firebase."
+      );
+    }
+
+    alunoFirebaseUid = usuario.uid;
+
+    console.log(
+      "PAS-PROVA: sessão Firebase disponível.",
+      {
+        anonima: usuario.isAnonymous
+      }
+    );
+
+    return usuario;
+
+  } catch (erro) {
+
+    console.error(
+      "PAS-PROVA: falha na autenticação:",
+      erro
+    );
+
+    throw erro;
+
+  }
+
+}
 /* =========================================================
    GERAR ID
    ========================================================= */
@@ -864,8 +953,16 @@ async function inicializarProva() {
 
   }
 
-
   try {
+
+    /* =====================================================
+       ETAPA 1 — AUTENTICAÇÃO FIREBASE
+
+       A autenticação deve estar disponível
+       antes das operações com o Firestore.
+       ===================================================== */
+
+    await autenticarAlunoPAS();
 
 
     /* =====================================================
