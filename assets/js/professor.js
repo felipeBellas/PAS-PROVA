@@ -2359,7 +2359,7 @@ function renderizarTentativas(tentativas) {
       rounded
     "
   >
-    Excluir
+   🗑 Excluir
   </button>
 </td>
 
@@ -2442,21 +2442,41 @@ function renderizarTentativas(tentativas) {
 
       </div>
       
+
 <!-- EXCLUIR TODOS OS RESULTADOS -->
 
-<div class="mt-4 flex flex-wrap items-center justify-end gap-2">
-
+<div
+  style="
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #e2e8f0;
+  "
+>
   <button
     type="button"
     id="pas-excluir-todos-resultados"
     ${resultados.length === 0 ? "disabled" : ""}
-    title="Excluir todos os resultados enviados desta avaliação"
-    class="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-xs font-bold text-red-700 hover:bg-red-100 disabled:opacity-50"
+    style="
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #f8e9e9;
+      color: #a23838;
+      border: 1px solid #ebcaca;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    "
   >
-    🗑 Excluir todos
+    <span aria-hidden="true">🗑</span>
+    <span>Excluir todos</span>
   </button>
-
 </div>
+
 
     `;
 
