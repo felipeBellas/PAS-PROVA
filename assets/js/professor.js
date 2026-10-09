@@ -1232,110 +1232,62 @@ if (
               </div>
 
 
-              <div
-                class="
-                  flex
-                  flex-wrap
-                  gap-2
-                "
-              >
+             
+<div class="flex flex-wrap gap-2">
 
-                <button
-                  type="button"
-                  data-acao="editar"
-                  data-id="${prova.id}"
-                  class="
-                    bg-amber-600
-                    hover:bg-amber-500
-                    text-white
-                    text-xs
-                    font-bold
-                    px-4
-                    py-2
-                    rounded
-                  "
-                >
-                  Editar
-                </button>
+  <!-- EDITAR -->
+  <button
+    type="button"
+    data-acao="editar"
+    data-id="${prova.id}"
+    class="pas-acao-btn pas-acao-editar"
+  >
+    ✎ Editar
+  </button>
 
-                                <button
-                  type="button"
-                  data-acao="copiar-link"
-                  data-id="${prova.id}"
-                  class="
-                    bg-blue-600
-                    hover:bg-blue-500
-                    text-white
-                    text-xs
-                    font-bold
-                    px-4
-                    py-2
-                    rounded
-                  "
-                >
-                  Copiar link
-                </button>
+  <!-- COPIAR LINK -->
+  <button
+    type="button"
+    data-acao="copiar-link"
+    data-id="${prova.id}"
+    class="pas-acao-btn pas-acao-copiar"
+  >
+    🔗 Copiar link
+  </button>
 
+  <!-- ACOMPANHAR -->
+  <button
+    type="button"
+    data-acao="acompanhar"
+    data-id="${prova.id}"
+    class="pas-acao-btn pas-acao-acompanhar"
+  >
+    ◉ Acompanhar
+  </button>
 
-                <button
-                  type="button"
-                  data-acao="acompanhar"
-                  data-id="${prova.id}"
-                  class="
-                    bg-emerald-700
-                    hover:bg-emerald-600
-                    text-white
-                    text-xs
-                    font-bold
-                    px-4
-                    py-2
-                    rounded
-                  "
-                >
-                  Acompanhar
-                </button>
+  <!-- TESTAR -->
+  <a
+    href="./prova.html?codigo=${encodeURIComponent(
+      prova.codigo || ""
+    )}"
+    target="_blank"
+    rel="noopener"
+    class="pas-acao-btn pas-acao-testar"
+  >
+    ▶ Testar
+  </a>
 
+  <!-- EXCLUIR -->
+  <button
+    type="button"
+    data-acao="excluir"
+    data-id="${prova.id}"
+    class="pas-acao-btn pas-acao-excluir"
+  >
+    🗑 Excluir
+  </button>
 
-                <a
-                  href="./prova.html?codigo=${encodeURIComponent(
-                    prova.codigo || ""
-                  )}"
-                  target="_blank"
-                  rel="noopener"
-                  class="
-                    bg-slate-700
-                    hover:bg-slate-600
-                    text-white
-                    text-xs
-                    font-bold
-                    px-4
-                    py-2
-                    rounded
-                  "
-                >
-                  Testar
-                </a>
-
-
-                <button
-                  type="button"
-                  data-acao="excluir"
-                  data-id="${prova.id}"
-                  class="
-                    bg-red-700
-                    hover:bg-red-600
-                    text-white
-                    text-xs
-                    font-bold
-                    px-4
-                    py-2
-                    rounded
-                  "
-                >
-                  Excluir
-                </button>
-
-              </div>
+</div>
 
             </div>
 
