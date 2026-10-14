@@ -1,84 +1,28 @@
-#PAS-PROVA
+# PAS-PROVA Interno — etapa 1
 
-#Plataforma de Avaliação Supervisionada
+## O que funciona
+- Editor visual de questões objetivas (4 alternativas), gabarito e pontuação.
+- Reordenação, duplicação, exclusão e pré-visualização.
+- Importação e validação de ScriptPAS 1.0 em JSON (até 100 questões).
+- Exportação de ScriptPAS JSON.
+- Salvamento de rascunhos **somente no navegador local**.
+- Layout adaptável a celulares e computadores.
 
-O PAS-PROVA é uma plataforma educacional desenvolvida para auxiliar professores na criação, aplicação e acompanhamento de avaliações digitais.
+## O que NÃO está implementado
+- Login de professor, sincronização com Firebase, publicação de provas para alunos.
+- Envio de respostas, cronômetro de aplicação e correção automática segura.
+- Integração com o painel atual, GitHub Actions e Firebase Hosting.
 
-A proposta é utilizar ferramentas já conhecidas, como o Google Forms, adicionando recursos próprios de controle e supervisão da aplicação.
+Esses recursos precisam ser implementados após o desenho de autenticação, isolamento de gabaritos, autorização de tentativas e correção confiável. **Não disponibilize os arquivos ScriptPAS com gabaritos aos alunos.**
 
-⸻
+## Como testar
+Copie a pasta para o repositório sem substituir arquivos existentes. Abra `editor-pas.html` através de um servidor HTTP local (por exemplo, VS Code Live Server) ou GitHub Pages. O JavaScript utiliza módulos ES.
 
-#Recursos
+## Arquivos
+- `editor-pas.html`: editor visual.
+- `assets/css/pas-interno.css`: estilos.
+- `assets/js/editor-pas.js`: interface e armazenamento local.
+- `assets/js/scriptpas.js`: especificação, validação e exemplo de ScriptPAS.
 
-* Painel do professor
-* Integração com Google Forms
-* Código de acesso para avaliações
-* Controle de tempo
-* Controle de saídas da tela
-* Acompanhamento das avaliações
-* Suporte a dispositivos móveis
-* Progressive Web App (PWA)
-
-⸻
-
-#Como funciona
-
--Professor
-
-Cria a avaliação e configura suas regras no PAS-PROVA.
-
-
-
--PAS-PROVA
-
-Controla o acesso, tempo e aplicação da avaliação.
-
-
-
--Aluno
-
-Acessa a avaliação através do código fornecido pelo professor.
-
-⸻
-
-#Tecnologias
-
-* HTML5
-* CSS3
-* JavaScript
-* PWA
-* Google Forms
-
-⸻
-
-#Status
-
-Em desenvolvimento
-
-O PAS-PROVA está em evolução contínua e novas funcionalidades serão adicionadas ao longo do desenvolvimento.
-
-⸻
-
-#Visão do projeto
-
-O objetivo é evoluir o PAS-PROVA para um ecossistema educacional com ferramentas específicas para:
-
-* PAS Professor
-* PAS Aluno
-* PAS Forms
-
-A plataforma busca tornar a aplicação de avaliações digitais mais simples, organizada e acessível para professores e instituições de ensino.
-
-⸻
-
-#Autor
-
-Felipe Bellas
-
-Projeto independente voltado ao desenvolvimento de soluções digitais para educação.
-
-⸻
-
-#Licença
-
-Este projeto está em desenvolvimento. A licença de distribuição será definida posteriormente.
+## Atenção
+Não sobrescreva `professor.html`, `professor.js`, `prova.html`, `prova.js` ou regras do Firestore. Antes da integração, compare com a versão estável do repositório.
