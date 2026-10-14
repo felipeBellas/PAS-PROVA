@@ -1,7 +1,6 @@
 import {
   KEY,modelo,novaQuestao,validar,parseScript,exemplo,COMANDO_IA
 }
-  
  from './scriptpas.js';
 
 const $=id=>document.getElementById(id);
@@ -20,6 +19,8 @@ function sync(){
   prova.turma=$('turma').value;
   prova.duracao=Number($('duracao').value);
   prova.instrucoes=$('instrucoes').value;
+  prova.embaralharQuestoes=$('embaralhar-questoes').checked;
+  prova.embaralharAlternativas=$('embaralhar-alternativas').checked;
   
 }
 
@@ -29,6 +30,8 @@ function preencher(){
   $('turma').value=prova.turma;
   $('duracao').value=prova.duracao;
   $('instrucoes').value=prova.instrucoes;
+  $('embaralhar-questoes').checked=prova.embaralharQuestoes!==false;
+  $('embaralhar-alternativas').checked=prova.embaralharAlternativas!==false;
   render();
   
 }
@@ -203,52 +206,87 @@ $('importar').onclick=()=>{
   } catch(e){ aviso(e.message,true); $('status').scrollIntoView({behavior:'smooth',block:'center'}); }
 };
 
-$('visualizar').onclick=()=>{
-  try{
-    const p=checar();
-    const root=$('previewBody');
-    root.replaceChildren();
-    const escola=document.createElement('p');
-    escola.className='preview-school';
-    escola.textContent=p.instituicao || '';
-    if (escola.textContent) root.append(escola);
-    const title=document.createElement('h3');
-    title.textContent=p.titulo;
-    const info=document.createElement('p');
-    info.textContent=`Turma: ${p.turma} · Duração: ${p.duracao} min · ${p.questoes.length} questões`;
-    const inst=document.createElement('p');
-    inst.textContent=p.instrucoes;
-    root.append(title,info,inst);
-    $('resultado-preview').textContent='';
-    p.questoes.forEach((q,i)=>{
-      const div=document.createElement('div');div.className='preview-question';const h=document.createElement('strong');h.textContent=`${i+1}. ${q.enunciado} (${q.pontos} ponto(s))`;div.append(h);q.alternativas.forEach((a,j)=>{
-        const l=document.createElement('label');l.className='preview-choice';const radio=document.createElement('input');radio.type='radio';radio.name=`preview-${i}`;radio.value=String(j);l.append(radio,document.createTextNode(`${'abcde'[j]}) ${a}`));div.append(l);
-      });root.append(div);
-    });
-    $('preview').showModal();
-    
+// Fisher-Yates com aleatoriedade criptografica do navegador.
+// O sorteio no editor e apenas uma SIMULACAO; nao publica gabaritos.
+function misturar(vetor){
+  const itens=[...vetor];
+  for(let i=itens.length-1;i>0;i--){
+    const limite=Math.floor(4294967296/(i+1))*(i+1);
+    let sorteio;
+    do { sorteio=crypto.getRandomValues(new Uint32Array(1))[0]; } while(sorteio>=limite);
+    const j=sorteio%(i+1);
+    [itens[i],itens[j]]=[itens[j],itens[i]];
   }
-  catch(e){
-    aviso(e.message,true);
-    
-  }
-};
+  return itens;
+}
 
+let simulacao=null;
+function criarOrdem(p){
+  const originais=p.questoes.map((q,indice)=>({q,indice}));
+  const ordenadas=p.embaralharQuestoes?misturar(originais):originais;
+  return ordenadas.map(({q,indice})=>{
+    const alternativas=q.alternativas.map((texto,original)=>({texto,original}));
+    const exibidas=p.embaralharAlternativas?misturar(alternativas):alternativas;
+    return {indiceOriginal:indice,enunciado:q.enunciado,pontos:q.pontos,
+      alternativas:exibidas.map(a=>a.texto),
+      corretaExibida:exibidas.findIndex(a=>a.original===q.correta)};
+  });
+}
+
+function mostrarSimulacao(){
+  const p=checar();
+  const root=$('previewBody');
+  root.replaceChildren();
+  const escola=document.createElement('p');
+  escola.className='preview-school';
+  escola.textContent=p.instituicao||'';
+  if(escola.textContent)root.append(escola);
+  const title=document.createElement('h3');title.textContent=p.titulo;
+  const info=document.createElement('p');
+  info.textContent=`Turma: ${p.turma} · Duração: ${p.duracao} min · ${p.questoes.length} questões`;
+  const inst=document.createElement('p');inst.textContent=p.instrucoes;
+  root.append(title,info,inst);
+  simulacao=criarOrdem(p);
+  $('resultado-preview').textContent='';
+  simulacao.forEach((q,i)=>{
+    const div=document.createElement('div');div.className='preview-question';
+    const h=document.createElement('strong');
+    h.textContent=`Questão ${i+1}. ${q.enunciado} (${q.pontos} ponto(s))`;
+    div.append(h);
+    q.alternativas.forEach((a,j)=>{
+      const l=document.createElement('label');l.className='preview-choice';
+      const radio=document.createElement('input');radio.type='radio';
+      radio.name=`preview-${i}`;radio.value=String(j);
+      l.append(radio,document.createTextNode(`${'abcde'[j]}) ${a}`));
+      div.append(l);
+    });
+    root.append(div);
+  });
+}
+
+$('visualizar').onclick=()=>{
+  try {mostrarSimulacao();$('preview').showModal();}
+  catch(e){aviso(e.message,true);}
+};
+$('nova-ordem-preview').onclick=()=>{
+  try {mostrarSimulacao();} catch(e){aviso(e.message,true);}
+};
 $('corrigir-preview').onclick=()=>{
-  const respostas=prova.questoes.map((q,i)=>{
-    const marcado=document.querySelector(`input[name=\"preview-${i}\"]:checked`);
-    return marcado ? Number(marcado.value) : null;
+  if(!simulacao)return;
+  const respostas=simulacao.map((q,i)=>{
+    const marcado=$('previewBody').querySelector(`input[name="preview-${i}"]:checked`);
+    return marcado?Number(marcado.value):null;
   });
   const pendentes=respostas.filter(v=>v===null).length;
-  if(pendentes && !confirm(`${pendentes} questão(ões) sem resposta. Conferir mesmo assim?`))return;
-  const total=prova.questoes.reduce((s,q)=>s+Number(q.pontos),0);
-  const obtido=prova.questoes.reduce((s,q,i)=>s+(respostas[i]===q.correta?Number(q.pontos):0),0);
-  const acertos=prova.questoes.filter((q,i)=>respostas[i]===q.correta).length;
-  $('resultado-preview').textContent=`Simulação: ${acertos}/${prova.questoes.length} acertos · ${obtido.toLocaleString('pt-BR')} de ${total.toLocaleString('pt-BR')} pontos. Nenhum resultado foi enviado.`;
+  if(pendentes&&!confirm(`${pendentes} questão(ões) sem resposta. Conferir mesmo assim?`))return;
+  const total=simulacao.reduce((s,q)=>s+Number(q.pontos),0);
+  const obtido=simulacao.reduce((s,q,i)=>s+(respostas[i]===q.corretaExibida?Number(q.pontos):0),0);
+  const acertos=simulacao.filter((q,i)=>respostas[i]===q.corretaExibida).length;
+  $('resultado-preview').textContent=`Simulação: ${acertos}/${simulacao.length} acertos · ${obtido.toLocaleString('pt-BR')} de ${total.toLocaleString('pt-BR')} pontos. Nenhum resultado foi enviado.`;
 };
 $('reiniciar-preview').onclick=()=>{
-  document.querySelectorAll('#previewBody input[type=radio]').forEach(r=>r.checked=false);
-  $('resultado-preview').textContent='Simulação reiniciada.';
+  $('previewBody').querySelectorAll('input[type=radio]').forEach(r=>r.checked=false);
+  $('resultado-preview').textContent='Simulação reiniciada. A ordem foi mantida.';
 };
 $('fechar').onclick=()=>$('preview').close();
 preencher();

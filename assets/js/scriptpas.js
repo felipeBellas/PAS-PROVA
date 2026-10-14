@@ -1,11 +1,10 @@
-
 // ScriptPAS 1.0: somente dados. Nunca usa eval, Function ou HTML de origem externa.
 export const KEY = 'pas_prova_interno_rascunhos_v1';
 
 export const uid = () => globalThis.crypto?.randomUUID?.() || `q-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 export const modelo = () => ({
-  scriptpas:'1.0',id:uid(),instituicao:'',titulo:'',turma:'',duracao:50,instrucoes:'',questoes:[novaQuestao()]
+  scriptpas:'1.0',id:uid(),instituicao:'',titulo:'',turma:'',duracao:50,instrucoes:'',embaralharQuestoes:true,embaralharAlternativas:true,questoes:[novaQuestao()]
 });
 
 export function novaQuestao(){
@@ -49,7 +48,7 @@ export function validar(obj){
   });
   
     return {
-    scriptpas:'1.0',id:uid(),instituicao:obj.instituicao??'',titulo:obj.titulo,turma:obj.turma,duracao:obj.duracao,instrucoes:obj.instrucoes??'',questoes
+    scriptpas:'1.0',id:uid(),instituicao:obj.instituicao??'',titulo:obj.titulo,turma:obj.turma,duracao:obj.duracao,instrucoes:obj.instrucoes??'',embaralharQuestoes:obj.embaralharQuestoes!==false,embaralharAlternativas:obj.embaralharAlternativas!==false,questoes
   };
   
   
