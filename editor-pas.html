@@ -38,6 +38,9 @@
      </button>
     </div>
     <div class="fields">
+     <label>Nome da instituição escolar
+      <input id="instituicao" maxlength="180" placeholder="Ex.: Colégio Estadual ..."/>
+     </label>
      <label>
       Título da avaliação
       <input id="titulo" maxlength="180" placeholder="Ex.: AV1 — Biologia"/>
@@ -120,8 +123,14 @@
       Fechar
      </button>
     </div>
+    <p class="hint">Modo de simulação: suas respostas não serão enviadas nem salvas como tentativa.</p>
     <div id="previewBody">
     </div>
+    <div class="preview-actions">
+      <button id="corrigir-preview" type="button">Conferir respostas</button>
+      <button id="reiniciar-preview" class="secondary" type="button">Reiniciar simulação</button>
+    </div>
+    <p id="resultado-preview" role="status" aria-live="polite"></p>
    </div>
   </dialog>
   <script src="assets/js/editor-pas.js" type="module">
