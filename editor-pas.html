@@ -58,6 +58,12 @@
       <textarea id="instrucoes" placeholder="Orientações para os alunos" rows="2"></textarea>
      </label>
     </div>
+    <fieldset class="shuffle-settings">
+     <legend>Embaralhamento da avaliação</legend>
+     <label><input id="embaralhar-questoes" type="checkbox" checked> Embaralhar questões para cada aluno</label>
+     <label><input id="embaralhar-alternativas" type="checkbox" checked> Embaralhar alternativas (a, b, c, d, e)</label>
+     <p class="hint">A numeração será sempre sequencial. A ordem será fixa durante cada tentativa.</p>
+    </fieldset>
     <div class="toolbar">
      <button id="adicionar">
       + Adicionar questão
@@ -129,6 +135,7 @@
     <div class="preview-actions">
       <button id="corrigir-preview" type="button">Conferir respostas</button>
       <button id="reiniciar-preview" class="secondary" type="button">Reiniciar simulação</button>
+      <button id="nova-ordem-preview" class="secondary" type="button">Sortear nova ordem</button>
     </div>
     <p id="resultado-preview" role="status" aria-live="polite"></p>
    </div>
