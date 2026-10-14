@@ -1,28 +1,18 @@
-# PAS-PROVA Interno — etapa 1
+PAS-PROVA INTERNO — ATUALIZAÇÃO PAS-SCRIPT 1.0 (CINCO ALTERNATIVAS)
 
-## O que funciona
-- Editor visual de questões objetivas (4 alternativas), gabarito e pontuação.
-- Reordenação, duplicação, exclusão e pré-visualização.
-- Importação e validação de ScriptPAS 1.0 em JSON (até 100 questões).
-- Exportação de ScriptPAS JSON.
-- Salvamento de rascunhos **somente no navegador local**.
-- Layout adaptável a celulares e computadores.
+1. Faça backup dos arquivos atuais do PAS-PROVA.
+2. Substitua SOMENTE estes arquivos já criados na etapa anterior:
+   editor-pas.html
+   assets/js/editor-pas.js
+   assets/js/scriptpas.js
+3. O CSS existente permanece inalterado. Os arquivos professor.html, professor.js, prova.html, prova.js, Firebase e Google Forms NÃO devem ser alterados.
+4. No GitHub Pages, atualize a página com Ctrl+F5 e teste editor-pas.html.
+5. Preencha o cabeçalho da prova manualmente. Clique em Copiar comando para IA, complete os campos [QUANTIDADE], [CONTEÚDOS], [ANO/SÉRIE], [NÍVEL], [ESTILO] e envie para a IA.
+6. Cole SOMENTE o JSON retornado na caixa PAS-Script e clique em Criar questões pelo PAS-Script.
+7. Confira cada questão, selecione gabaritos, e clique em Salvar rascunho e Pré-visualizar.
+8. Rascunhos antigos com quatro alternativas recebem uma quinta alternativa vazia ao serem abertos; preencha-a antes de salvar.
+9. A importação ACRESCENTA questões às existentes; uma única questão inicial completamente vazia é substituída.
+10. Não há geração de link nem correção automática nesta etapa. Essas funções dependerão da futura integração segura com Firebase.
+11. Rascunhos ficam apenas no armazenamento local do navegador. Faça backup dos seus dados importantes antes de limpar o navegador.
 
-## O que NÃO está implementado
-- Login de professor, sincronização com Firebase, publicação de provas para alunos.
-- Envio de respostas, cronômetro de aplicação e correção automática segura.
-- Integração com o painel atual, GitHub Actions e Firebase Hosting.
-
-Esses recursos precisam ser implementados após o desenho de autenticação, isolamento de gabaritos, autorização de tentativas e correção confiável. **Não disponibilize os arquivos ScriptPAS com gabaritos aos alunos.**
-
-## Como testar
-Copie a pasta para o repositório sem substituir arquivos existentes. Abra `editor-pas.html` através de um servidor HTTP local (por exemplo, VS Code Live Server) ou GitHub Pages. O JavaScript utiliza módulos ES.
-
-## Arquivos
-- `editor-pas.html`: editor visual.
-- `assets/css/pas-interno.css`: estilos.
-- `assets/js/editor-pas.js`: interface e armazenamento local.
-- `assets/js/scriptpas.js`: especificação, validação e exemplo de ScriptPAS.
-
-## Atenção
-Não sobrescreva `professor.html`, `professor.js`, `prova.html`, `prova.js` ou regras do Firestore. Antes da integração, compare com a versão estável do repositório.
+COMANDO PAS-SCRIPT OFICIAL: incluído no botão Copiar comando para IA.

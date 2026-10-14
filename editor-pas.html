@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="pt-BR">
  <head>
   <meta charset="utf-8"/>
@@ -31,7 +30,7 @@
        Criar avaliação
       </h1>
       <p>
-       Questões objetivas com quatro alternativas. Sem alterações no sistema atual.
+       Questões objetivas com cinco alternativas (a, b, c, d, e).
       </p>
      </div>
      <button class="secondary" id="nova">
@@ -66,9 +65,6 @@
      <button class="secondary" id="visualizar">
       Pré-visualizar
      </button>
-     <button class="secondary" id="exportar">
-      Exportar ScriptPAS
-     </button>
     </div>
     <p class="status" id="status" role="status">
     </p>
@@ -89,22 +85,19 @@
     <div id="questoes">
     </div>
    </section>
-   <section class="panel">
-    <h2>
-     Importar ScriptPAS
-    </h2>
-    <p>
-     Cole um JSON ScriptPAS 1.0 criado manualmente ou por IA. A importação substitui o rascunho atual após confirmação.
-    </p>
-    <textarea id="script" placeholder='{"scriptpas":"1.0", "titulo":"...", "questoes":[...]}' rows="9" spellcheck="false"></textarea>
+   <section class="panel" id="painel-pas-script">
+    <h2>PAS-Script</h2>
+    <p>Copie o comando oficial, complete as informações e peça a uma IA para gerar somente as questões. Depois cole o resultado abaixo.</p>
     <div class="toolbar">
-     <button id="importar">
-      Validar e importar
-     </button>
-     <button class="secondary" id="exemplo">
-      Inserir exemplo
-     </button>
+     <button class="secondary" id="copiar-comando" type="button">Copiar comando para IA</button>
     </div>
+    <label for="script">Cole aqui o PAS-Script criado pela IA</label>
+    <textarea id="script" placeholder='{"scriptpas":"1.0","questoes":[...]}' rows="9" spellcheck="false"></textarea>
+    <div class="toolbar">
+     <button id="importar" type="button">Criar questões pelo PAS-Script</button>
+     <button class="secondary" id="exemplo" type="button">Ver exemplo</button>
+    </div>
+    <p class="hint">O PAS-Script contém somente as questões. Título, turma, duração e instruções são preenchidos acima. A importação acrescenta questões às já existentes.</p>
    </section>
    <section class="panel">
     <h2>
@@ -113,7 +106,7 @@
     <div id="rascunhos">
     </div>
     <p class="hint">
-     O armazenamento local é apenas para desenvolvimento: pode ser apagado pelo navegador e não sincroniza dispositivos. Exporte o ScriptPAS para guardar uma cópia.
+     O armazenamento local é apenas para desenvolvimento: pode ser apagado pelo navegador e não sincroniza dispositivos. Faça uma cópia de segurança do conteúdo antes de limpar os dados do navegador.
     </p>
    </section>
   </main>
