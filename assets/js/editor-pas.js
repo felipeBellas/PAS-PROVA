@@ -2,6 +2,7 @@ import {
   KEY,modelo,novaQuestao,validar,parseScript,exemplo,COMANDO_IA
 }
   
+  
  from './scriptpas.js';
 
 const $=id=>document.getElementById(id);
