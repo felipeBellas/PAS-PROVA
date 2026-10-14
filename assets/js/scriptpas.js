@@ -1,3 +1,4 @@
+
 // ScriptPAS 1.0: somente dados. Nunca usa eval, Function ou HTML de origem externa.
 export const KEY = 'pas_prova_interno_rascunhos_v1';
 
