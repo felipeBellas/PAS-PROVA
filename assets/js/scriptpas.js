@@ -4,7 +4,7 @@ export const KEY = 'pas_prova_interno_rascunhos_v1';
 export const uid = () => globalThis.crypto?.randomUUID?.() || `q-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 export const modelo = () => ({
-  scriptpas:'1.0',id:uid(),titulo:'',turma:'',duracao:50,instrucoes:'',questoes:[novaQuestao()]
+  scriptpas:'1.0',id:uid(),instituicao:'',titulo:'',turma:'',duracao:50,instrucoes:'',questoes:[novaQuestao()]
 });
 
 export function novaQuestao(){
@@ -22,6 +22,8 @@ export function validar(obj){
   
     if(obj.scriptpas!=='1.0')throw Error('Versão ScriptPAS não suportada. Use 1.0.');
   
+    if(!isString(obj.instituicao??'',180))throw Error('Nome da instituição inválido.');
+
     if(!isString(obj.titulo,180)||!obj.titulo.trim())throw Error('Informe um título (até 180 caracteres).');
   
     if(!isString(obj.turma,100))throw Error('Turma inválida.');
@@ -46,7 +48,7 @@ export function validar(obj){
   });
   
     return {
-    scriptpas:'1.0',id:uid(),titulo:obj.titulo,turma:obj.turma,duracao:obj.duracao,instrucoes:obj.instrucoes??'',questoes
+    scriptpas:'1.0',id:uid(),instituicao:obj.instituicao??'',titulo:obj.titulo,turma:obj.turma,duracao:obj.duracao,instrucoes:obj.instrucoes??'',questoes
   };
   
   

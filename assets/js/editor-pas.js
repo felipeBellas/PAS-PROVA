@@ -14,6 +14,7 @@ const aviso=(msg,erro=false)=>{
 };
 
 function sync(){
+  prova.instituicao=$('instituicao').value.trim();
   prova.titulo=$('titulo').value;
   prova.turma=$('turma').value;
   prova.duracao=Number($('duracao').value);
@@ -22,6 +23,7 @@ function sync(){
 }
 
 function preencher(){
+   $('instituicao').value=prova.instituicao || '';
    $('titulo').value=prova.titulo;
   $('turma').value=prova.turma;
   $('duracao').value=prova.duracao;
@@ -205,6 +207,10 @@ $('visualizar').onclick=()=>{
     const p=checar();
     const root=$('previewBody');
     root.replaceChildren();
+    const escola=document.createElement('p');
+    escola.className='preview-school';
+    escola.textContent=p.instituicao || '';
+    if (escola.textContent) root.append(escola);
     const title=document.createElement('h3');
     title.textContent=p.titulo;
     const info=document.createElement('p');
@@ -212,9 +218,10 @@ $('visualizar').onclick=()=>{
     const inst=document.createElement('p');
     inst.textContent=p.instrucoes;
     root.append(title,info,inst);
+    $('resultado-preview').textContent='';
     p.questoes.forEach((q,i)=>{
       const div=document.createElement('div');div.className='preview-question';const h=document.createElement('strong');h.textContent=`${i+1}. ${q.enunciado} (${q.pontos} ponto(s))`;div.append(h);q.alternativas.forEach((a,j)=>{
-        const l=document.createElement('label');l.className='preview-choice';const radio=document.createElement('input');radio.type='radio';radio.name=`preview-${i}`;radio.disabled=true;l.append(radio,document.createTextNode(`${'abcde'[j]}) ${a}`));div.append(l);
+        const l=document.createElement('label');l.className='preview-choice';const radio=document.createElement('input');radio.type='radio';radio.name=`preview-${i}`;radio.value=String(j);l.append(radio,document.createTextNode(`${'abcde'[j]}) ${a}`));div.append(l);
       });root.append(div);
     });
     $('preview').showModal();
@@ -226,6 +233,22 @@ $('visualizar').onclick=()=>{
   }
 };
 
+$('corrigir-preview').onclick=()=>{
+  const respostas=prova.questoes.map((q,i)=>{
+    const marcado=document.querySelector(`input[name=\"preview-${i}\"]:checked`);
+    return marcado ? Number(marcado.value) : null;
+  });
+  const pendentes=respostas.filter(v=>v===null).length;
+  if(pendentes && !confirm(`${pendentes} questão(ões) sem resposta. Conferir mesmo assim?`))return;
+  const total=prova.questoes.reduce((s,q)=>s+Number(q.pontos),0);
+  const obtido=prova.questoes.reduce((s,q,i)=>s+(respostas[i]===q.correta?Number(q.pontos):0),0);
+  const acertos=prova.questoes.filter((q,i)=>respostas[i]===q.correta).length;
+  $('resultado-preview').textContent=`Simulação: ${acertos}/${prova.questoes.length} acertos · ${obtido.toLocaleString('pt-BR')} de ${total.toLocaleString('pt-BR')} pontos. Nenhum resultado foi enviado.`;
+};
+$('reiniciar-preview').onclick=()=>{
+  document.querySelectorAll('#previewBody input[type=radio]').forEach(r=>r.checked=false);
+  $('resultado-preview').textContent='Simulação reiniciada.';
+};
 $('fechar').onclick=()=>$('preview').close();
 preencher();
 lista();
