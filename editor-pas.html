@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width,initial-scale=1" name="viewport"/>
+  <title>
+   PAS-PROVA | Editor Interno
+  </title>
+  <link href="assets/css/pas-interno.css" rel="stylesheet"/>
+ </head>
+ <body>
+  <header class="top">
+   <div>
+    <strong>
+     PAS-PROVA
+    </strong>
+    <small>
+     Editor de avaliações internas · Versão de preparação
+    </small>
+   </div>
+   <span class="pill">
+    Rascunho local
+   </span>
+  </header>
+  <main class="wrap">
+   <section class="panel">
+    <div class="heading">
+     <div>
+      <h1>
+       Criar avaliação
+      </h1>
+      <p>
+       Questões objetivas com quatro alternativas. Sem alterações no sistema atual.
+      </p>
+     </div>
+     <button class="secondary" id="nova">
+      Nova avaliação
+     </button>
+    </div>
+    <div class="fields">
+     <label>
+      Título da avaliação
+      <input id="titulo" maxlength="180" placeholder="Ex.: AV1 — Biologia"/>
+     </label>
+     <label>
+      Turma
+      <input id="turma" maxlength="100" placeholder="Ex.: 3º ano"/>
+     </label>
+     <label>
+      Duração (minutos)
+      <input id="duracao" max="300" min="1" type="number" value="50"/>
+     </label>
+     <label>
+      Instruções
+      <textarea id="instrucoes" placeholder="Orientações para os alunos" rows="2"></textarea>
+     </label>
+    </div>
+    <div class="toolbar">
+     <button id="adicionar">
+      + Adicionar questão
+     </button>
+     <button class="secondary" id="salvar">
+      Salvar rascunho
+     </button>
+     <button class="secondary" id="visualizar">
+      Pré-visualizar
+     </button>
+     <button class="secondary" id="exportar">
+      Exportar ScriptPAS
+     </button>
+    </div>
+    <p class="status" id="status" role="status">
+    </p>
+   </section>
+   <section class="panel">
+    <div class="heading">
+     <div>
+      <h2>
+       Questões
+       <span id="total">
+       </span>
+      </h2>
+      <p>
+       Selecione a alternativa correta para cada questão.
+      </p>
+     </div>
+    </div>
+    <div id="questoes">
+    </div>
+   </section>
+   <section class="panel">
+    <h2>
+     Importar ScriptPAS
+    </h2>
+    <p>
+     Cole um JSON ScriptPAS 1.0 criado manualmente ou por IA. A importação substitui o rascunho atual após confirmação.
+    </p>
+    <textarea id="script" placeholder='{"scriptpas":"1.0", "titulo":"...", "questoes":[...]}' rows="9" spellcheck="false"></textarea>
+    <div class="toolbar">
+     <button id="importar">
+      Validar e importar
+     </button>
+     <button class="secondary" id="exemplo">
+      Inserir exemplo
+     </button>
+    </div>
+   </section>
+   <section class="panel">
+    <h2>
+     Rascunhos deste dispositivo
+    </h2>
+    <div id="rascunhos">
+    </div>
+    <p class="hint">
+     O armazenamento local é apenas para desenvolvimento: pode ser apagado pelo navegador e não sincroniza dispositivos. Exporte o ScriptPAS para guardar uma cópia.
+    </p>
+   </section>
+  </main>
+  <dialog id="preview">
+   <div class="modal">
+    <div class="heading">
+     <h2>
+      Pré-visualização
+     </h2>
+     <button class="secondary" id="fechar">
+      Fechar
+     </button>
+    </div>
+    <div id="previewBody">
+    </div>
+   </div>
+  </dialog>
+  <script src="assets/js/editor-pas.js" type="module">
+  </script>
+ </body>
+</html>
