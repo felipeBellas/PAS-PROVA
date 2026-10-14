@@ -1,6 +1,7 @@
 // ScriptPAS 1.0: somente dados. Nunca usa eval, Function ou HTML de origem externa.
 export const KEY = 'pas_prova_interno_rascunhos_v1';
 
+
 export const uid = () => globalThis.crypto?.randomUUID?.() || `q-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 export const modelo = () => ({
