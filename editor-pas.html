@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="pt-BR">
  <head>
   <meta charset="utf-8"/>
@@ -65,6 +64,15 @@
      <label><input id="embaralhar-questoes" type="checkbox" checked> Embaralhar questões para cada aluno</label>
      <label><input id="embaralhar-alternativas" type="checkbox" checked> Embaralhar alternativas (a, b, c, d, e)</label>
      <p class="hint">A numeração será sempre sequencial. A ordem será fixa durante cada tentativa.</p>
+    </fieldset>
+    <fieldset class="shuffle-settings" id="seguranca-avaliacao">
+     <legend>Segurança da avaliação</legend>
+     <label><input id="bloquear-copia" type="checkbox" checked> Impedir seleção e cópia do texto durante a prova</label>
+     <label><input id="monitorar-saidas" type="checkbox" checked> Monitorar saídas da tela da avaliação</label>
+     <label for="limite-saidas">Número de saídas permitidas
+      <input id="limite-saidas" type="number" min="0" max="20" step="1" value="2" style="width:90px"/>
+     </label>
+     <p class="hint">A partir da saída seguinte ao limite, a tentativa será encerrada. Mudanças em provas publicadas exigem Atualizar publicação no painel.</p>
     </fieldset>
     <div class="toolbar">
      <button id="adicionar">
