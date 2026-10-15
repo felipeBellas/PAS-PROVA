@@ -3,7 +3,6 @@ import {
 }
  from './scriptpas.js';
 
-
 import {db,auth} from './firebase-config.js';
 import {onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
 import {doc,getDoc,setDoc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
@@ -182,15 +181,16 @@ $('publicar').onclick=async()=>{
     checar();
     const id=editarId||prova.id;
     const ref=doc(db,'provas_internas',id);
-    const anterior=await getDoc(ref);
-    if(anterior.exists() && anterior.data().professorUid!==professorUid){
+    const anterior=editarId ? await getDoc(ref) : null;
+    if(editarId && !anterior.exists())throw Error('Avaliação para edição não encontrada.');
+    if(anterior?.exists() && anterior.data().professorUid!==professorUid){
       const perfil=(await getDoc(doc(db,'usuarios',professorUid))).data()?.perfil;
       if(perfil!=='administrador')throw Error('Esta avaliação pertence a outro professor.');
     }
     botao.disabled=true;
-    const payload={scriptpas:'1.0',instituicao:prova.instituicao||'',titulo:prova.titulo.trim(),turma:prova.turma.trim(),duracao:prova.duracao,instrucoes:prova.instrucoes||'',embaralharQuestoes:prova.embaralharQuestoes!==false,embaralharAlternativas:prova.embaralharAlternativas!==false,questoes:structuredClone(prova.questoes),professorUid:anterior.exists()?anterior.data().professorUid:professorUid,estado:'preparacao',atualizadoEm:serverTimestamp()};
-    if(!anterior.exists())payload.criadoEm=serverTimestamp();
-    await setDoc(ref,payload,{merge:true});
+    const payload={scriptpas:'1.0',instituicao:prova.instituicao||'',titulo:prova.titulo.trim(),turma:prova.turma.trim(),duracao:prova.duracao,instrucoes:prova.instrucoes||'',embaralharQuestoes:prova.embaralharQuestoes!==false,embaralharAlternativas:prova.embaralharAlternativas!==false,questoes:structuredClone(prova.questoes),professorUid:anterior?.exists()?anterior.data().professorUid:professorUid,estado:'preparacao',atualizadoEm:serverTimestamp()};
+    if(!editarId)payload.criadoEm=serverTimestamp();
+    await setDoc(ref,payload,{merge:!!editarId});
     aviso('Avaliação salva no Firebase! Ela aparecerá no Painel do Professor como Em preparação. O link do aluno ainda não está habilitado.');
   }catch(e){aviso('Erro ao salvar no Firebase: '+e.message,true);}finally{botao.disabled=false;}
 };
