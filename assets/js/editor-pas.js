@@ -170,7 +170,7 @@ async function carregarEdicao(){
     const d=snap.data();
     if(!professorUid || (d.professorUid!==professorUid && !(await getDoc(doc(db,'usuarios',professorUid))).data()?.perfil?.includes('administrador')))throw Error('Sem permissão para editar.');
     prova={...d,id:editarId,questoes:d.questoes.map(q=>({...q}))};
-    preencher();aviso('Avaliação carregada do Firebase.');
+    preencher();aviso('Avaliação carregada.');
   }catch(e){aviso('Não foi possível carregar: '+e.message,true);}
 }
 onAuthStateChanged(auth, u=>{if(u && !u.isAnonymous)setTimeout(carregarEdicao,250);});
@@ -191,8 +191,8 @@ $('publicar').onclick=async()=>{
     const payload={scriptpas:'1.0',instituicao:prova.instituicao||'',titulo:prova.titulo.trim(),turma:prova.turma.trim(),duracao:prova.duracao,instrucoes:prova.instrucoes||'',embaralharQuestoes:prova.embaralharQuestoes!==false,embaralharAlternativas:prova.embaralharAlternativas!==false,questoes:structuredClone(prova.questoes),professorUid:anterior?.exists()?anterior.data().professorUid:professorUid,estado:'preparacao',atualizadoEm:serverTimestamp()};
     if(!editarId)payload.criadoEm=serverTimestamp();
     await setDoc(ref,payload,{merge:!!editarId});
-    aviso('Avaliação salva no Firebase! Ela aparecerá no Painel do Professor como Em preparação. O link do aluno ainda não está habilitado.');
-  }catch(e){aviso('Erro ao salvar no Firebase: '+e.message,true);}finally{botao.disabled=false;}
+    aviso('Avaliação salva! Você pode gerenciá-la no Painel do Professor.');
+  }catch(e){aviso('Erro ao salvar avaliação: '+e.message,true);}finally{botao.disabled=false;}
 };
 $('nova').onclick=()=>{
   if(confirm('Criar uma nova prova? Salve ou exporte a atual antes de continuar.')){
