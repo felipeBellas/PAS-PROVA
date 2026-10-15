@@ -46,6 +46,9 @@ async function carregar(){
             instrucoes:prova.instrucoes||'',
             embaralharQuestoes:prova.embaralharQuestoes!==false,
             embaralharAlternativas:prova.embaralharAlternativas!==false,
+            bloquearCopia:prova.bloquearCopia===true,
+            monitorarSaidas:prova.monitorarSaidas===true,
+            limiteSaidas:prova.monitorarSaidas===true?Math.max(0,Math.min(20,Number(prova.limiteSaidas)||0)):0,
             questoes:prova.questoes.map((q,i)=>({
               id:String(q.id||i),
               enunciado:q.enunciado,

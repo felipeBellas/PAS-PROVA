@@ -37,6 +37,9 @@ const aviso=(msg,erro=false)=>{
   
 };
 
+function atualizarCampoSaidas(){ $('limite-saidas').disabled=!$('monitorar-saidas').checked; }
+$('monitorar-saidas').addEventListener('change',atualizarCampoSaidas);
+
 function sync(){
   prova.instituicao=$('instituicao').value.trim();
   prova.professorNome=$('professor-nome').value.trim();
@@ -47,6 +50,9 @@ function sync(){
   prova.instrucoes=$('instrucoes').value;
   prova.embaralharQuestoes=$('embaralhar-questoes').checked;
   prova.embaralharAlternativas=$('embaralhar-alternativas').checked;
+  prova.bloquearCopia=$('bloquear-copia').checked;
+  prova.monitorarSaidas=$('monitorar-saidas').checked;
+  prova.limiteSaidas=Number($('limite-saidas').value);
   
 }
 
@@ -59,7 +65,11 @@ function preencher(){
   $('duracao').value=prova.duracao;
   $('instrucoes').value=prova.instrucoes;
   $('embaralhar-questoes').checked=prova.embaralharQuestoes!==false;
-  $('embaralhar-alternativas').checked=prova.embaralharAlternativas!==false;
+   $('embaralhar-alternativas').checked=prova.embaralharAlternativas!==false;
+   $('bloquear-copia').checked=prova.bloquearCopia===true;
+   $('monitorar-saidas').checked=prova.monitorarSaidas===true;
+   $('limite-saidas').value=Number.isInteger(Number(prova.limiteSaidas))?prova.limiteSaidas:2;
+   atualizarCampoSaidas();
   render();
   
 }
@@ -145,7 +155,8 @@ function lista(){
 
 function checar(){
   sync();
-  return validar(prova);
+   if(prova.monitorarSaidas && (!Number.isInteger(prova.limiteSaidas)||prova.limiteSaidas<0||prova.limiteSaidas>20))throw Error('Informe um limite de saídas inteiro entre 0 e 20.');
+   return validar(prova);
   
 }
 
@@ -204,7 +215,7 @@ $('publicar').onclick=async()=>{
       if(perfil!=='administrador')throw Error('Esta avaliação pertence a outro professor.');
     }
     botao.disabled=true;
-    const payload={scriptpas:'1.0',instituicao:prova.instituicao||'',professorNome:prova.professorNome||'',titulo:prova.titulo.trim(),turma:prova.turma.trim(),turmaId:prova.turmaId,duracao:prova.duracao,instrucoes:prova.instrucoes||'',embaralharQuestoes:prova.embaralharQuestoes!==false,embaralharAlternativas:prova.embaralharAlternativas!==false,questoes:structuredClone(prova.questoes),professorUid:anterior?.exists()?anterior.data().professorUid:professorUid,estado:anterior?.exists()&&anterior.data().estado==='publicada'?'publicada':'preparacao',atualizadoEm:serverTimestamp()};
+    const payload={scriptpas:'1.0',instituicao:prova.instituicao||'',professorNome:prova.professorNome||'',titulo:prova.titulo.trim(),turma:prova.turma.trim(),turmaId:prova.turmaId,duracao:prova.duracao,instrucoes:prova.instrucoes||'',embaralharQuestoes:prova.embaralharQuestoes!==false,embaralharAlternativas:prova.embaralharAlternativas!==false,bloquearCopia:prova.bloquearCopia===true,monitorarSaidas:prova.monitorarSaidas===true,limiteSaidas:prova.monitorarSaidas?prova.limiteSaidas:0,questoes:structuredClone(prova.questoes),professorUid:anterior?.exists()?anterior.data().professorUid:professorUid,estado:anterior?.exists()&&anterior.data().estado==='publicada'?'publicada':'preparacao',atualizadoEm:serverTimestamp()};
     if(!editarId)payload.criadoEm=serverTimestamp();
     await setDoc(ref,payload,{merge:!!editarId});
     aviso('Avaliação salva! Você pode gerenciá-la no Painel do Professor.');
