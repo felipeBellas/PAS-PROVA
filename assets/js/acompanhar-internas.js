@@ -63,39 +63,44 @@ function mostrar(){
 }
 async function carregar(){if(!prova)return;$('status').textContent='Carregando resultados...';try{const [resp,vs,lista]=await Promise.all([getDocs(query(collection(db,'respostas_internas'),where('codigo','==',prova.codigoPublico))),getDocs(query(collection(db,'vagas_pas'),where('codigo','==',prova.codigoPublico))),getDoc(doc(db,'listas_publicas',prova.codigoPublico))]);vagas=new Map(vs.docs.map(d=>[d.data().alunoId,d.data()]));alunos=(lista.exists()?lista.data().alunos:[]).slice().sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));linhas=resp.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.aluno).localeCompare(String(b.aluno),'pt-BR'));mostrar();}catch(e){$('status').textContent='Erro: '+e.message;console.error(e);}}
 onAuthStateChanged(auth,async user=>{if(!user||user.isAnonymous){$('status').textContent='Entre como professor.';return;}try{const perfil=await getDoc(doc(db,'usuarios',user.uid));if(!perfil.exists()||perfil.data().ativo!==true||!['professor','administrador'].includes(perfil.data().perfil))throw Error('Acesso negado.');uid=user.uid;const snap=await getDoc(doc(db,'provas_internas',provaId));if(!snap.exists())throw Error('Avaliação não encontrada.');prova={id:snap.id,...snap.data()};if(!prova.codigoPublico)throw Error('Avaliação não publicada.');document.querySelectorAll('.coluna-nota').forEach(el=>el.textContent='Nota (0–'+formatarPontos(totalProva())+')');$('titulo').textContent=prova.titulo;$('subtitulo').textContent=[prova.instituicao,prova.turma].filter(Boolean).join(' · ');$('atualizar').disabled=false;$('sincronizar-situacoes').disabled=false;$('pdf').disabled=false;const gabarito=$('gabarito-pdf');if(gabarito){gabarito.href='./gabarito-pas.html?prova='+encodeURIComponent(prova.id);gabarito.style.pointerEvents='auto';gabarito.style.opacity='1';gabarito.removeAttribute('aria-disabled');}await carregar();}catch(e){$('status').textContent=e.message;}});
-// Etapa 2B1: sincroniza SOMENTE registros legados ausentes.
-// Mantem a leitura original; nenhuma permissao de vagas_pas e alterada.
+// Etapa 2B1 corrigida: sincronizacao individual com diagnostico por etapa.
+// Nenhuma permissao e ampliada e nenhum registro antigo e excluido.
 async function sincronizarSituacoesAntigas(){
  const botao=$('sincronizar-situacoes');
  if(!prova||!uid||!botao)return;
  botao.disabled=true;
+ let etapa='inicializacao';
+ let criados=0;
  try{
   const codigo=prova.codigoPublico;
-  const [reservas,espelhos]=await Promise.all([
-   getDocs(query(collection(db,'vagas_pas'),where('codigo','==',codigo))),
-   getDocs(collection(db,'situacoes_pas',codigo,'alunos'))
-  ]);
+  etapa='consulta das reservas antigas';
+  const reservas=await getDocs(query(collection(db,'vagas_pas'),where('codigo','==',codigo)));
+  etapa='consulta dos estados existentes';
+  const espelhos=await getDocs(collection(db,'situacoes_pas',codigo,'alunos'));
   const existentes=new Set(espelhos.docs.map(d=>d.id));
   const pendentes=reservas.docs.map(d=>d.data()).filter(v=>
    v.alunoId&&['em_andamento','concluida'].includes(v.status)&&!existentes.has(v.alunoId)
   );
-  let criados=0;
-  // Lotes pequenos evitam limites de operacoes e regras do Firestore.
-  for(let i=0;i<pendentes.length;i+=20){
+  if(!pendentes.length){
+   $('status').textContent='Sincronizacao concluida: nenhum estado antigo pendente.';
+   return;
+  }
+  for(const v of pendentes){
+   etapa='criacao do estado de aluno '+v.alunoId;
+   // Uma escrita por vez evita exceder o limite de consultas de regras por lote.
+   // A regra de criacao valida a correspondencia com vagas_pas.
    const lote=writeBatch(db);
-   const grupo=pendentes.slice(i,i+20);
-   for(const v of grupo){
-    lote.set(doc(db,'situacoes_pas',codigo,'alunos',v.alunoId),{
-     codigo,alunoId:v.alunoId,status:v.status
-    });
-   }
+   lote.set(doc(db,'situacoes_pas',codigo,'alunos',v.alunoId),{
+    codigo,alunoId:v.alunoId,status:v.status
+   });
    await lote.commit();
-   criados+=grupo.length;
+   criados++;
+   $('status').textContent=`Sincronizando estados antigos: ${criados} de ${pendentes.length}...`;
   }
   $('status').textContent=`Sincronizacao concluida: ${criados} registro(s) antigo(s) criado(s). Nenhuma tentativa foi apagada.`;
  }catch(e){
-  $('status').textContent='Falha na sincronizacao: '+e.message;
-  console.error(e);
+  $('status').textContent=`Falha na sincronizacao (${etapa}): ${e.code||e.message}. ${criados} registro(s) criado(s) antes da falha.`;
+  console.error('Sincronizacao PAS-PROVA:',etapa,e);
  }finally{botao.disabled=false;}
 }
 $('sincronizar-situacoes').onclick=sincronizarSituacoesAntigas;
