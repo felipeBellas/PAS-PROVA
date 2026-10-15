@@ -451,6 +451,12 @@ body {
       <a href="./editor-pas.html" style="display:block;text-align:center;background:#365a50;color:white;padding:16px;border-radius:8px;font-weight:700">+ ACESSAR EDITOR DE PROVAS</a>
       <p style="margin-top:12px;font-size:13px;color:#63736c">Etapa 1: edição e rascunhos locais. Publicação e link do aluno serão ativados após a integração segura.</p>
     </section>
+    <section style="background:white;border-radius:16px;padding:24px;margin-top:24px;color:#172e29">
+      <h2 style="font-size:23px;font-weight:700">Avaliações internas cadastradas</h2>
+      <p style="color:#64748b;margin:10px 0">As provas salvas no Firebase aparecem aqui. Os links para alunos serão liberados após a implementação da aplicação segura.</p>
+      <button id="atualizar-internas" type="button" style="padding:10px 16px;background:#365a50;color:white;border-radius:8px">Atualizar lista</button>
+      <div id="lista-internas" style="margin-top:16px">Carregando...</div>
+    </section>
     <!-- Estrutura antiga temporariamente preservada, oculta, para compatibilidade com professor.js -->
     <div style="display:none !important" aria-hidden="true" inert>
     <!-- ===================================================
@@ -1318,10 +1324,8 @@ body {
        JAVASCRIPT
        ===================================================== -->
 
-  <script
-    type="module"
-    src="./assets/js/professor.js"
-  ></script>
+  <script type="module" src="./assets/js/professor.js"></script>
+  <script type="module" src="./assets/js/professor-internas.js"></script>
 
 
 </body>
