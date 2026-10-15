@@ -5,15 +5,26 @@ import {
 
 import {db,auth} from './firebase-config.js';
 import {onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
-import {doc,getDoc,setDoc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+import {doc,getDoc,setDoc,serverTimestamp,getDocs,collection,query,where} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 const $=id=>document.getElementById(id);
 let professorUid=null;
+let turmasCache=[];
+async function carregarTurmas(user,admin){
+  const base=collection(db,'turmas_pas');
+  const snap=await getDocs(admin?base:query(base,where('professorUid','==',user.uid)));
+  turmasCache=snap.docs.map(d=>({id:d.id,...d.data()}));
+  const sel=$('turma-id');sel.replaceChildren(new Option('Selecione uma turma cadastrada',''));
+  turmasCache.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).forEach(t=>sel.add(new Option(t.nome+' ('+t.alunos.length+' alunos)',t.id)));
+  if(prova.turmaId)sel.value=prova.turmaId;
+  sel.dispatchEvent(new Event('change'));
+}
+$('turma-id').addEventListener('change',()=>{const t=turmasCache.find(t=>t.id===$('turma-id').value);$('turma').value=t?.nome||'';});
 onAuthStateChanged(auth, async user=>{
   professorUid=null;
   if(!user || user.isAnonymous)return;
   try {
     const snap=await getDoc(doc(db,'usuarios',user.uid));
-    if(snap.exists() && snap.data().ativo===true && ['professor','administrador'].includes(snap.data().perfil))professorUid=user.uid;
+    if(snap.exists() && snap.data().ativo===true && ['professor','administrador'].includes(snap.data().perfil)){professorUid=user.uid;await carregarTurmas(user,snap.data().perfil==='administrador');}
   }catch(e){console.error(e);}
 });
 
@@ -30,6 +41,7 @@ function sync(){
   prova.instituicao=$('instituicao').value.trim();
   prova.titulo=$('titulo').value;
   prova.turma=$('turma').value;
+  prova.turmaId=$('turma-id').value;
   prova.duracao=Number($('duracao').value);
   prova.instrucoes=$('instrucoes').value;
   prova.embaralharQuestoes=$('embaralhar-questoes').checked;
@@ -41,6 +53,7 @@ function preencher(){
    $('instituicao').value=prova.instituicao || '';
    $('titulo').value=prova.titulo;
   $('turma').value=prova.turma;
+  $('turma-id').value=prova.turmaId||'';
   $('duracao').value=prova.duracao;
   $('instrucoes').value=prova.instrucoes;
   $('embaralhar-questoes').checked=prova.embaralharQuestoes!==false;
@@ -179,6 +192,7 @@ $('publicar').onclick=async()=>{
   try{
     if(!professorUid)throw Error('Aguarde a autenticação do professor.');
     checar();
+    if(!prova.turmaId)throw Error('Selecione uma turma cadastrada.');
     const id=editarId||prova.id;
     const ref=doc(db,'provas_internas',id);
     const anterior=editarId ? await getDoc(ref) : null;
@@ -188,7 +202,7 @@ $('publicar').onclick=async()=>{
       if(perfil!=='administrador')throw Error('Esta avaliação pertence a outro professor.');
     }
     botao.disabled=true;
-    const payload={scriptpas:'1.0',instituicao:prova.instituicao||'',titulo:prova.titulo.trim(),turma:prova.turma.trim(),duracao:prova.duracao,instrucoes:prova.instrucoes||'',embaralharQuestoes:prova.embaralharQuestoes!==false,embaralharAlternativas:prova.embaralharAlternativas!==false,questoes:structuredClone(prova.questoes),professorUid:anterior?.exists()?anterior.data().professorUid:professorUid,estado:'preparacao',atualizadoEm:serverTimestamp()};
+    const payload={scriptpas:'1.0',instituicao:prova.instituicao||'',titulo:prova.titulo.trim(),turma:prova.turma.trim(),turmaId:prova.turmaId,duracao:prova.duracao,instrucoes:prova.instrucoes||'',embaralharQuestoes:prova.embaralharQuestoes!==false,embaralharAlternativas:prova.embaralharAlternativas!==false,questoes:structuredClone(prova.questoes),professorUid:anterior?.exists()?anterior.data().professorUid:professorUid,estado:anterior?.exists()&&anterior.data().estado==='publicada'?'publicada':'preparacao',atualizadoEm:serverTimestamp()};
     if(!editarId)payload.criadoEm=serverTimestamp();
     await setDoc(ref,payload,{merge:!!editarId});
     aviso('Avaliação salva! Você pode gerenciá-la no Painel do Professor.');

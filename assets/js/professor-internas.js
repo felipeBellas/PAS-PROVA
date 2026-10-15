@@ -1,7 +1,6 @@
 import {db,auth} from './firebase-config.js';
-
 import {onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
-import {collection,getDocs,doc,getDoc,deleteDoc,query,where,setDoc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+import {collection,getDocs,doc,getDoc,deleteDoc,query,where,setDoc,serverTimestamp,writeBatch} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 
 const area=document.getElementById('lista-internas');
 const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -29,12 +28,18 @@ async function carregar(){
         publicar.disabled=true;
         try{
           const codigo=prova.codigoPublico||('PAS'+crypto.randomUUID().replace(/-/g,'').slice(0,16).toUpperCase());
+          if(!prova.turmaId)throw Error('Esta avaliação é anterior ao cadastro de turmas. Abra Editar, selecione a turma cadastrada e salve antes de publicar.');
+          const turmaSnap=await getDoc(doc(db,'turmas_pas',prova.turmaId));
+          if(!turmaSnap.exists())throw Error('Turma cadastrada não encontrada.');
+          const turma=turmaSnap.data();
+          if(turma.professorUid!==prova.professorUid && !admin)throw Error('Turma de outro professor.');
           const dados={
             provaId:prova.id,
             professorUid:prova.professorUid,
             codigo,
             titulo:prova.titulo,
-            turma:prova.turma||'',
+            turma:turma.nome,
+            turmaId:prova.turmaId,
             instituicao:prova.instituicao||'',
             duracao:prova.duracao,
             instrucoes:prova.instrucoes||'',
@@ -49,8 +54,11 @@ async function carregar(){
             publicada:true,
             atualizadoEm:serverTimestamp()
           };
-          await setDoc(doc(db,'aplicacoes_internas',codigo),dados);
-          await setDoc(doc(db,'provas_internas',prova.id),{codigoPublico:codigo,estado:'publicada',atualizadoEm:serverTimestamp()},{merge:true});
+          const batch=writeBatch(db);
+          batch.set(doc(db,'aplicacoes_internas',codigo),dados);
+          batch.set(doc(db,'listas_publicas',codigo),{codigo,provaId:prova.id,professorUid:prova.professorUid,turmaId:prova.turmaId,alunos:turma.alunos.map(a=>({id:a.id,nome:a.nome})),ids:turma.alunos.map(a=>a.id),atualizadoEm:serverTimestamp()});
+          batch.set(doc(db,'provas_internas',prova.id),{codigoPublico:codigo,estado:'publicada',atualizadoEm:serverTimestamp()},{merge:true});
+          await batch.commit();
           await carregar();
         }catch(e){console.error('Falha ao publicar avaliação:',e);alert('Erro ao publicar: '+e.message);publicar.disabled=false;}
       };

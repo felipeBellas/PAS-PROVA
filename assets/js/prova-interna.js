@@ -1,46 +1,21 @@
 import {db,auth} from './firebase-config.js';
 import {onAuthStateChanged,signInAnonymously} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
-import {doc,getDoc,setDoc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
-const $=id=>document.getElementById(id), codigo=new URLSearchParams(location.search).get('codigo');
-let app=null,uid=null,session=null,questions=[],timer=null,busy=false;
-const status=(s,bad=false)=>{$('status').textContent=s;$('status').className=bad?'error':'muted'};
-const key='pas_interna_v1_'+codigo;
-function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const n=new Uint32Array(1);crypto.getRandomValues(n);const j=n[0]%(i+1);[a[i],a[j]]=[a[j],a[i]]}return a;}
-function render(){const area=$('questions');area.replaceChildren();questions.forEach((q,i)=>{const box=document.createElement('div');box.className='box';const h=document.createElement('h2');h.textContent=`${i+1}. ${q.enunciado}`;box.append(h);q.alternativas.forEach((a,j)=>{const label=document.createElement('label');label.className='option';const radio=document.createElement('input');radio.type='radio';radio.name='q'+i;radio.value=String(j);radio.checked=session.respostas[q.id]===a.original;radio.onchange=()=>{session.respostas[q.id]=a.original;save();};label.append(radio,document.createTextNode(' '+String.fromCharCode(65+j)+') '+a.texto));box.append(label)});area.append(box)});}
+import {doc,getDoc,setDoc,collection,query,where,onSnapshot,writeBatch,serverTimestamp} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+const $=id=>document.getElementById(id);
+const codigo=new URLSearchParams(location.search).get('codigo');
+let app=null,uid=null,session=null,questions=[],timer=null,busy=false,roster=[],statuses=new Map(),unsubscribe=null;
+const key='pas_interna_v2_'+codigo;
+const status=(s,bad=false)=>{$('status').textContent=s;$('status').className=bad?'error':'muted';};
+const vagaId=alunoId=>codigo+'_'+alunoId;
+function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const n=new Uint32Array(1);crypto.getRandomValues(n);const j=n[0]%(i+1);[b[i],b[j]]=[b[j],b[i]];}return b;}
 function save(){localStorage.setItem(key,JSON.stringify(session));}
-function clock(){const left=Math.max(0,Math.ceil((session.fim-Date.now())/1000));$('clock').textContent=`${Math.floor(left/60)}:${String(left%60).padStart(2,'0')}`;if(left===0){clearInterval(timer);submit(true)}}
-function mostrarComprovante(){
-  $('identify').style.display='none';
-  $('exam').style.display='none';
-  $('done').style.display='block';
-  $('clock').textContent='Encerrada';
-  $('receipt').textContent='Aluno: '+session.nome+' | Turma: '+app.turma+' | Protocolo: '+session.id;
-  const destino=$('review');destino.replaceChildren();
-  const titulo=document.createElement('h3');titulo.textContent='Questões e respostas registradas';destino.append(titulo);
-  for(const [i,q] of session.ordem.entries()){
-    const bloco=document.createElement('div');bloco.className='box';
-    const h=document.createElement('h3');h.textContent=(i+1)+'. '+q.enunciado;bloco.append(h);
-    const marcada=session.respostas[q.id];
-    q.alternativas.forEach((a,j)=>{
-      const p=document.createElement('p');
-      const escolhida=marcada===a.original;
-      p.textContent=(escolhida?'✓ ':'')+String.fromCharCode(65+j)+') '+a.texto+(escolhida?' — Sua resposta':'');
-      if(escolhida){p.style.fontWeight='700';p.style.color='#315b4e';}
-      bloco.append(p);
-    });
-    if(!Number.isInteger(marcada)||marcada<0){const p=document.createElement('p');p.textContent='Não respondida';bloco.append(p);}
-    destino.append(bloco);
-  }
-  status('Avaliação encerrada. Suas respostas foram registradas.');
-}
-function enter(){ $('identify').style.display='none';$('exam').style.display='block';questions=session.ordem;render();clock();timer=setInterval(clock,1000);status('Avaliação em andamento — '+session.nome+' · '+app.turma);}
-async function submit(expired=false){if(busy||!session||session.enviada)return;if(!expired&&!confirm('Confirmar envio definitivo da avaliação?'))return;busy=true;$('submit').disabled=true;
-try{const respostas=questions.map(q=>({id:q.id,alternativa:Number.isInteger(session.respostas[q.id])?session.respostas[q.id]:-1}));
-await setDoc(doc(db,'respostas_internas',session.id),{alunoUid:uid,codigo,provaId:app.provaId,aluno:session.nome,turma:app.turma,respostas,encerradaEm:serverTimestamp(),status:expired?'tempo_esgotado':'enviada'});
-session.enviada=true;save();clearInterval(timer);mostrarComprovante();
-}catch(e){status('Falha ao enviar. Verifique sua conexão e tente novamente: '+e.message,true);$('submit').disabled=false;}finally{busy=false;}}
+function renderLista(){const sel=$('student');const current=sel.value;sel.replaceChildren(new Option('Selecione seu nome completo',''));for(const a of roster){const st=statuses.get(a.id);const label=st?.status==='concluida'?' ✓ Concluída':st?.status==='em_andamento'?' ⏳ Em andamento':'';const o=new Option(a.nome+label,a.id);if(st?.status==='concluida'||(st?.status==='em_andamento'&&st.alunoUid!==uid))o.disabled=true;sel.add(o);}sel.value=current;}
+function render(){const area=$('questions');area.replaceChildren();questions.forEach((q,i)=>{const box=document.createElement('div');box.className='box';const h=document.createElement('h2');h.textContent=`${i+1}. ${q.enunciado}`;box.append(h);q.alternativas.forEach((a,j)=>{const label=document.createElement('label');label.className='option';const radio=document.createElement('input');radio.type='radio';radio.name='q'+i;radio.checked=session.respostas[q.id]===a.original;radio.onchange=()=>{session.respostas[q.id]=a.original;save();};label.append(radio,document.createTextNode(' '+String.fromCharCode(65+j)+') '+a.texto));box.append(label);});area.append(box);});}
+function showDone(){clearInterval(timer);$('identify').hidden=true;$('exam').hidden=true;$('done').hidden=false;$('clock').textContent='Encerrada';$('receipt').textContent=`Aluno: ${session.nome} | Turma: ${app.turma} | Protocolo: ${session.id}`;const area=$('review');area.replaceChildren();for(const [i,q] of session.ordem.entries()){const box=document.createElement('div');box.className='box';const h=document.createElement('h3');h.textContent=(i+1)+'. '+q.enunciado;box.append(h);const chosen=session.respostas[q.id];for(const [j,a] of q.alternativas.entries()){const p=document.createElement('p');p.textContent=String.fromCharCode(65+j)+') '+a.texto+(chosen===a.original?' — Sua resposta':'');if(chosen===a.original){p.style.fontWeight='700';p.style.color='#315b4e';}box.append(p);}area.append(box);}status('Avaliação encerrada. Respostas registradas.');}
+function clock(){if(!session||session.enviada)return;const sec=Math.max(0,Math.ceil((session.fim-Date.now())/1000));$('clock').textContent=`${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')}`;if(!sec){clearInterval(timer);submit(true);}}
+function enter(){ $('identify').hidden=true;$('done').hidden=true;$('exam').hidden=false;questions=session.ordem;render();clearInterval(timer);clock();timer=setInterval(clock,1000);status('Avaliação em andamento — '+session.nome);}
+async function submit(expired=false){if(busy||!session||session.enviada)return;if(!expired&&!confirm('Enviar definitivamente a avaliação?'))return;busy=true;$('submit').disabled=true;try{const respostas=questions.map(q=>({id:q.id,alternativa:Number.isInteger(session.respostas[q.id])?session.respostas[q.id]:-1}));const batch=writeBatch(db);batch.set(doc(db,'respostas_internas',session.id),{alunoUid:uid,codigo,provaId:app.provaId,aluno:session.nome,alunoId:session.alunoId,turma:app.turma,respostas,encerradaEm:serverTimestamp(),status:expired?'tempo_esgotado':'enviada'});batch.update(doc(db,'vagas_pas',vagaId(session.alunoId)),{status:'concluida',encerradaEm:serverTimestamp()});await batch.commit();session.enviada=true;save();showDone();}catch(e){status('Falha ao enviar: '+e.message,true);$('submit').disabled=false;}finally{busy=false;}}
 $('submit').onclick=()=>submit(false);
-$('start').onclick=()=>{const nome=$('student').value.trim().replace(/\s+/g,' ');if(nome.split(' ').length<2){status('Informe nome e sobrenome.',true);return;}session={id:crypto.randomUUID(),nome,uid,codigo,fim:Date.now()+app.duracao*60000,respostas:{},ordem:(app.embaralharQuestoes?shuffle(app.questoes):[...app.questoes]).map(q=>({id:q.id,enunciado:q.enunciado,alternativas:(app.embaralharAlternativas?shuffle(q.alternativas.map((texto,original)=>({texto,original}))):q.alternativas.map((texto,original)=>({texto,original})))})),enviada:false};save();enter();};
-async function boot(user){try{uid=user.uid;if(!codigo||!/^PAS[A-Z0-9]{16}$/.test(codigo))throw Error('Código da avaliação inválido.');const snap=await getDoc(doc(db,'aplicacoes_internas',codigo));if(!snap.exists()||!snap.data().publicada)throw Error('Avaliação não disponível.');app=snap.data();$('exam-title').textContent=app.titulo;$('details').textContent='Turma: '+app.turma+' · Duração: '+app.duracao+' minutos';$('instructions').textContent=app.instrucoes||'';const raw=localStorage.getItem(key);if(raw){try{const old=JSON.parse(raw);if(old.uid===uid&&old.codigo===codigo){session=old;if(session.enviada){mostrarComprovante();return;}enter();return;}}catch{}}
-$('start').disabled=false;status('Identifique-se para começar.');}catch(e){status(e.message,true);$('start').disabled=true;}}
-onAuthStateChanged(auth,async user=>{if(user){boot(user)}else{try{await signInAnonymously(auth)}catch(e){status('Falha na autenticação anônima: '+e.message,true)}}});
+$('start').onclick=async()=>{if(busy)return;const alunoId=$('student').value;const aluno=roster.find(a=>a.id===alunoId);if(!aluno){status('Selecione seu nome na lista.',true);return;}busy=true;$('start').disabled=true;try{const ref=doc(db,'vagas_pas',vagaId(alunoId));const existing=await getDoc(ref);if(existing.exists()){const v=existing.data();if(v.status==='concluida')throw Error('Avaliação já concluída para este aluno.');if(v.alunoUid!==uid)throw Error('Avaliação em andamento para este aluno.');const local=JSON.parse(localStorage.getItem(key)||'null');if(!local||local.id!==v.tentativaId)throw Error('A tentativa está reservada neste navegador, mas o progresso não foi encontrado. Solicite auxílio ao professor.');session=local;enter();return;}const id=crypto.randomUUID();const fim=Date.now()+Number(app.duracao)*60000;const ordem=(app.embaralharQuestoes?shuffle(app.questoes):[...app.questoes]).map(q=>({id:q.id,enunciado:q.enunciado,alternativas:app.embaralharAlternativas?shuffle(q.alternativas.map((texto,original)=>({texto,original}))):q.alternativas.map((texto,original)=>({texto,original}))}));const nova={id,nome:aluno.nome,alunoId,uid,codigo,fim,respostas:{},ordem,enviada:false};await setDoc(ref,{codigo,provaId:app.provaId,alunoId,alunoUid:uid,tentativaId:id,status:'em_andamento',iniciadaEm:serverTimestamp()});session=nova;save();enter();}catch(e){status(e.message,true);}finally{busy=false;$('start').disabled=false;}};
+async function boot(user){try{uid=user.uid;if(!user.isAnonymous)throw Error('Abra a avaliação em uma janela anônima, sem a sessão de professor.');if(!codigo||!/^PAS[A-Z0-9]{16}$/.test(codigo))throw Error('Código inválido.');const [ap,lista]=await Promise.all([getDoc(doc(db,'aplicacoes_internas',codigo)),getDoc(doc(db,'listas_publicas',codigo))]);if(!ap.exists()||ap.data().estado!=='publicada')throw Error('Avaliação indisponível.');if(!lista.exists())throw Error('Esta avaliação ainda não tem turma vinculada. Solicite ao professor que atualize a publicação.');app=ap.data();roster=lista.data().alunos||[];$('exam-title').textContent=app.titulo;$('details').textContent=`Turma: ${app.turma} · Duração: ${app.duracao} minutos`;$('instructions').textContent=app.instrucoes||'';unsubscribe?.();unsubscribe=onSnapshot(query(collection(db,'vagas_pas'),where('codigo','==',codigo)),snap=>{statuses=new Map(snap.docs.map(d=>[d.data().alunoId,d.data()]));renderLista();},e=>status('Falha ao atualizar situação dos alunos: '+e.message,true));const local=JSON.parse(localStorage.getItem(key)||'null');if(local&&local.uid===uid&&local.codigo===codigo){const v=await getDoc(doc(db,'vagas_pas',vagaId(local.alunoId)));if(v.exists()&&v.data().tentativaId===local.id){session=local;if(v.data().status==='concluida'){session.enviada=true;showDone();return;}if(session.enviada){showDone();return;}enter();return;}}$('start').disabled=false;status('Selecione seu nome para começar.');}catch(e){status(e.message,true);$('start').disabled=true;}}
+onAuthStateChanged(auth,async u=>{if(u)await boot(u);else{try{await signInAnonymously(auth);}catch(e){status('Erro de autenticação: '+e.message,true);}}});
