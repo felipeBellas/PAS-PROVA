@@ -1,0 +1,33 @@
+import {db,auth} from './firebase-config.js';
+import {onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+import {collection,getDocs,doc,getDoc,deleteDoc,query,where} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+const area=document.getElementById('lista-internas');
+const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let usuario=null,admin=false;
+async function carregar(){
+  if(!usuario)return;
+  area.textContent='Carregando avaliações...';
+  try{
+    const base=collection(db,'provas_internas');
+    const snap=await getDocs(admin?base:query(base,where('professorUid','==',usuario.uid)));
+    const dados=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.titulo).localeCompare(String(b.titulo),'pt-BR'));
+    area.replaceChildren();
+    if(!dados.length){area.textContent='Nenhuma avaliação interna salva no Firebase.';return;}
+    for(const prova of dados){
+      const card=document.createElement('div');card.style='border:1px solid #dbe4df;border-radius:12px;padding:16px;margin:12px 0';
+      const titulo=document.createElement('div');titulo.innerHTML=`<strong>${esc(prova.titulo)}</strong> <span style="color:#64748b">— ${esc(prova.turma)} · ${prova.questoes?.length||0} questões · Em preparação</span>`;
+      const botoes=document.createElement('div');botoes.style='display:flex;gap:8px;flex-wrap:wrap;margin-top:12px';
+      const editar=document.createElement('a');editar.href='./editor-pas.html?editar='+encodeURIComponent(prova.id);editar.textContent='Editar';editar.style='padding:9px 14px;border-radius:7px;background:#e4eee8;color:#234c3e';
+      const excluir=document.createElement('button');excluir.type='button';excluir.textContent='Excluir';excluir.style='padding:9px 14px;border-radius:7px;background:#fce8e8;color:#8b2020';
+      excluir.onclick=async()=>{if(!confirm('Excluir esta avaliação interna do Firebase?'))return;try{await deleteDoc(doc(db,'provas_internas',prova.id));await carregar();}catch(e){alert('Erro: '+e.message)}};
+      const link=document.createElement('button');link.textContent='Copiar link (em desenvolvimento)';link.disabled=true;link.title='A página do aluno ainda não está pronta';link.style='padding:9px 14px;border-radius:7px;background:#eee;color:#777';
+      botoes.append(editar,link,excluir);card.append(titulo,botoes);area.append(card);
+    }
+  }catch(e){area.textContent='Erro ao consultar avaliações: '+e.message;console.error(e)}
+}
+onAuthStateChanged(auth,async u=>{
+  if(!u||u.isAnonymous)return;
+  try{const perfil=await getDoc(doc(db,'usuarios',u.uid));if(!perfil.exists()||perfil.data().ativo!==true||!['professor','administrador'].includes(perfil.data().perfil))return;
+  usuario=u;admin=perfil.data().perfil==='administrador';await carregar();}catch(e){area.textContent='Falha de autenticação: '+e.message}
+});
+document.getElementById('atualizar-internas')?.addEventListener('click',carregar);

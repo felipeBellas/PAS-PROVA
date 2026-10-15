@@ -3,7 +3,20 @@ import {
 }
  from './scriptpas.js';
 
+import {db,auth} from './firebase-config.js';
+import {onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+import {doc,getDoc,setDoc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 const $=id=>document.getElementById(id);
+let professorUid=null;
+onAuthStateChanged(auth, async user=>{
+  professorUid=null;
+  if(!user || user.isAnonymous)return;
+  try {
+    const snap=await getDoc(doc(db,'usuarios',user.uid));
+    if(snap.exists() && snap.data().ativo===true && ['professor','administrador'].includes(snap.data().perfil))professorUid=user.uid;
+  }catch(e){console.error(e);}
+});
+
 
 let prova=modelo();
 
@@ -147,6 +160,39 @@ $('adicionar').onclick=()=>{
   
 };
 
+const params=new URLSearchParams(location.search);
+const editarId=params.get('editar');
+async function carregarEdicao(){
+  if(!editarId)return;
+  try{
+    const snap=await getDoc(doc(db,'provas_internas',editarId));
+    if(!snap.exists())throw Error('Avaliação não encontrada.');
+    const d=snap.data();
+    if(!professorUid || (d.professorUid!==professorUid && !(await getDoc(doc(db,'usuarios',professorUid))).data()?.perfil?.includes('administrador')))throw Error('Sem permissão para editar.');
+    prova={...d,id:editarId,questoes:d.questoes.map(q=>({...q}))};
+    preencher();aviso('Avaliação carregada do Firebase.');
+  }catch(e){aviso('Não foi possível carregar: '+e.message,true);}
+}
+onAuthStateChanged(auth, u=>{if(u && !u.isAnonymous)setTimeout(carregarEdicao,250);});
+$('publicar').onclick=async()=>{
+  const botao=$('publicar');
+  try{
+    if(!professorUid)throw Error('Aguarde a autenticação do professor.');
+    checar();
+    const id=editarId||prova.id;
+    const ref=doc(db,'provas_internas',id);
+    const anterior=await getDoc(ref);
+    if(anterior.exists() && anterior.data().professorUid!==professorUid){
+      const perfil=(await getDoc(doc(db,'usuarios',professorUid))).data()?.perfil;
+      if(perfil!=='administrador')throw Error('Esta avaliação pertence a outro professor.');
+    }
+    botao.disabled=true;
+    const payload={scriptpas:'1.0',instituicao:prova.instituicao||'',titulo:prova.titulo.trim(),turma:prova.turma.trim(),duracao:prova.duracao,instrucoes:prova.instrucoes||'',embaralharQuestoes:prova.embaralharQuestoes!==false,embaralharAlternativas:prova.embaralharAlternativas!==false,questoes:structuredClone(prova.questoes),professorUid:anterior.exists()?anterior.data().professorUid:professorUid,estado:'preparacao',atualizadoEm:serverTimestamp()};
+    if(!anterior.exists())payload.criadoEm=serverTimestamp();
+    await setDoc(ref,payload,{merge:true});
+    aviso('Avaliação salva no Firebase! Ela aparecerá no Painel do Professor como Em preparação. O link do aluno ainda não está habilitado.');
+  }catch(e){aviso('Erro ao salvar no Firebase: '+e.message,true);}finally{botao.disabled=false;}
+};
 $('nova').onclick=()=>{
   if(confirm('Criar uma nova prova? Salve ou exporte a atual antes de continuar.')){
     prova=modelo();
