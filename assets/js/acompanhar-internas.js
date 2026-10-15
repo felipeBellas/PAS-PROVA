@@ -28,7 +28,7 @@ function nota(respostas){
  },0);
  return formatarPontos(pontos);
 }
-async function liberar(aluno, vaga){if(!vaga){alert('Não há tentativa para liberar.');return;}if(!confirm('Liberar uma nova tentativa para '+aluno.nome+'? A resposta anterior permanecerá no histórico.'))return;try{const batch=writeBatch(db);batch.delete(doc(db,'vagas_pas',prova.codigoPublico+'_'+aluno.id));batch.set(doc(collection(db,'liberacoes_pas')),{codigo:prova.codigoPublico,provaId:prova.id,alunoId:aluno.id,aluno:aluno.nome,professorUid:uid,tentativaAnterior:vaga.tentativaId,liberadoEm:serverTimestamp()});await batch.commit();await carregar();$('status').textContent='Nova tentativa liberada. A anterior foi preservada.';}catch(e){alert('Falha ao liberar: '+e.message);}}
+async function liberar(aluno, vaga){if(!vaga){alert('Não há tentativa para liberar.');return;}if(!confirm('Liberar uma nova tentativa para '+aluno.nome+'? A resposta anterior permanecerá no histórico.'))return;try{const batch=writeBatch(db);batch.delete(doc(db,'vagas_pas',prova.codigoPublico+'_'+aluno.id));batch.delete(doc(db,'situacoes_pas',prova.codigoPublico,'alunos',aluno.id));batch.set(doc(collection(db,'liberacoes_pas')),{codigo:prova.codigoPublico,provaId:prova.id,alunoId:aluno.id,aluno:aluno.nome,professorUid:uid,tentativaAnterior:vaga.tentativaId,liberadoEm:serverTimestamp()});await batch.commit();await carregar();$('status').textContent='Nova tentativa liberada. A anterior foi preservada.';}catch(e){alert('Falha ao liberar: '+e.message);}}
 function criarLinha(destino, valores, acao=null){
  const tr=document.createElement('tr');
  for(const valor of valores){const td=document.createElement('td');td.textContent=String(valor??'—');tr.append(td);}
