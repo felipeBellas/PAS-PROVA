@@ -1,6 +1,6 @@
 import {db,auth} from './firebase-config.js';
 import {onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
-import {doc,getDoc,collection,getDocs,query,where,writeBatch,serverTimestamp} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+import {doc,getDoc,collection,getDocs,query,where,writeBatch,serverTimestamp,deleteDoc} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 const $=id=>document.getElementById(id), provaId=new URLSearchParams(location.search).get('prova');
 let prova=null,uid=null,linhas=[],vagas=new Map(),alunos=[];
 function data(v){if(!v)return '—';const d=v.toDate?.()||new Date(v);return Number.isNaN(d.getTime())?'—':d.toLocaleString('pt-BR');}
@@ -28,7 +28,7 @@ function nota(respostas){
  },0);
  return formatarPontos(pontos);
 }
-async function liberar(aluno, vaga){if(!vaga){alert('Não há tentativa para liberar.');return;}if(!confirm('Liberar uma nova tentativa para '+aluno.nome+'? A resposta anterior permanecerá no histórico.'))return;try{const batch=writeBatch(db);batch.delete(doc(db,'vagas_pas',prova.codigoPublico+'_'+aluno.id));batch.set(doc(collection(db,'liberacoes_pas')),{codigo:prova.codigoPublico,provaId:prova.id,alunoId:aluno.id,aluno:aluno.nome,professorUid:uid,tentativaAnterior:vaga.tentativaId,liberadoEm:serverTimestamp()});await batch.commit();await carregar();$('status').textContent='Nova tentativa liberada. A anterior foi preservada.';}catch(e){alert('Falha ao liberar: '+e.message);}}
+async function liberar(aluno, vaga){if(!vaga){alert('Não há tentativa para liberar.');return;}if(!confirm('Liberar uma nova tentativa para '+aluno.nome+'? A resposta anterior permanecerá no histórico.'))return;try{const batch=writeBatch(db);batch.delete(doc(db,'vagas_pas',prova.codigoPublico+'_'+aluno.id));batch.set(doc(collection(db,'liberacoes_pas')),{codigo:prova.codigoPublico,provaId:prova.id,alunoId:aluno.id,aluno:aluno.nome,professorUid:uid,tentativaAnterior:vaga.tentativaId,liberadoEm:serverTimestamp()});await batch.commit();deleteDoc(doc(db,'situacoes_pas',prova.codigoPublico,'alunos',aluno.id)).catch(e=>console.warn('Espelho nao removido:',e.code||e.message));await carregar();$('status').textContent='Nova tentativa liberada. A anterior foi preservada.';}catch(e){alert('Falha ao liberar: '+e.message);}}
 function criarLinha(destino, valores, acao=null){
  const tr=document.createElement('tr');
  for(const valor of valores){const td=document.createElement('td');td.textContent=String(valor??'—');tr.append(td);}
