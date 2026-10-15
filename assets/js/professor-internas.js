@@ -1,4 +1,5 @@
 import {db,auth} from './firebase-config.js';
+
 import {onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
 import {collection,getDocs,doc,getDoc,deleteDoc,query,where} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 const area=document.getElementById('lista-internas');
