@@ -55,7 +55,7 @@ async function carregar(){
       };
       const link=document.createElement('button');link.type='button';link.textContent='Copiar link';link.disabled=prova.estado!=='publicada'||!prova.codigoPublico;link.style='padding:9px 14px;border-radius:7px;background:#e7edf4;color:#274b67';
       link.onclick=async()=>{const url=new URL('./prova-interna.html?codigo='+encodeURIComponent(prova.codigoPublico),location.href).href;try{await navigator.clipboard.writeText(url);alert('Link copiado: '+url);}catch(e){prompt('Copie o link da avaliação:',url);}};
-      botoes.append(editar,publicar,link,excluir);card.append(titulo,botoes);area.append(card);
+      const acompanhar=document.createElement('a');acompanhar.href='./acompanhar-interna.html?prova='+encodeURIComponent(prova.id);acompanhar.textContent='Acompanhar prova';acompanhar.style='padding:9px 14px;border-radius:7px;background:#e3eaf4;color:#274b67';acompanhar.style.pointerEvents=prova.codigoPublico?'auto':'none';acompanhar.style.opacity=prova.codigoPublico?'1':'.45';botoes.append(editar,publicar,link,acompanhar,excluir);card.append(titulo,botoes);area.append(card);
     }
   }catch(e){area.textContent='Erro ao consultar avaliações: '+e.message;console.error(e)}
 }
