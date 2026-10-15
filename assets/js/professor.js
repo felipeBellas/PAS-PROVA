@@ -1232,62 +1232,110 @@ if (
               </div>
 
 
-             
-<div class="flex flex-wrap gap-2">
+              <div
+                class="
+                  flex
+                  flex-wrap
+                  gap-2
+                "
+              >
 
-  <!-- EDITAR -->
-  <button
-    type="button"
-    data-acao="editar"
-    data-id="${prova.id}"
-    class="pas-acao-btn pas-acao-editar"
-  >
-    ✎ Editar
-  </button>
+                <button
+                  type="button"
+                  data-acao="editar"
+                  data-id="${prova.id}"
+                  class="
+                    bg-amber-600
+                    hover:bg-amber-500
+                    text-white
+                    text-xs
+                    font-bold
+                    px-4
+                    py-2
+                    rounded
+                  "
+                >
+                  ✎ Editar
+                </button>
 
-  <!-- COPIAR LINK -->
-  <button
-    type="button"
-    data-acao="copiar-link"
-    data-id="${prova.id}"
-    class="pas-acao-btn pas-acao-copiar"
-  >
-    🔗 Copiar link
-  </button>
+                                <button
+                  type="button"
+                  data-acao="copiar-link"
+                  data-id="${prova.id}"
+                  class="
+                    bg-blue-600
+                    hover:bg-blue-500
+                    text-white
+                    text-xs
+                    font-bold
+                    px-4
+                    py-2
+                    rounded
+                  "
+                >
+                  ▢ Copiar link
+                </button>
 
-  <!-- ACOMPANHAR -->
-  <button
-    type="button"
-    data-acao="acompanhar"
-    data-id="${prova.id}"
-    class="pas-acao-btn pas-acao-acompanhar"
-  >
-    ◉ Acompanhar
-  </button>
 
-  <!-- TESTAR -->
-  <a
-    href="./prova.html?codigo=${encodeURIComponent(
-      prova.codigo || ""
-    )}"
-    target="_blank"
-    rel="noopener"
-    class="pas-acao-btn pas-acao-testar"
-  >
-    ▶ Testar
-  </a>
+                <button
+                  type="button"
+                  data-acao="acompanhar"
+                  data-id="${prova.id}"
+                  class="
+                    bg-emerald-700
+                    hover:bg-emerald-600
+                    text-white
+                    text-xs
+                    font-bold
+                    px-4
+                    py-2
+                    rounded
+                  "
+                >
+                  ◉ Acompanhar
+                </button>
 
-  <!-- EXCLUIR -->
-  <button
-    type="button"
-    data-acao="excluir"
-    data-id="${prova.id}"
-    class="pas-acao-btn pas-acao-excluir"
-  >
-    🗑 Excluir
-  </button>
 
-</div>
+                <a
+                  href="./prova.html?codigo=${encodeURIComponent(
+                    prova.codigo || ""
+                  )}"
+                  target="_blank"
+                  rel="noopener"
+                  class="
+                    bg-slate-700
+                    hover:bg-slate-600
+                    text-white
+                    text-xs
+                    font-bold
+                    px-4
+                    py-2
+                    rounded
+                  "
+                >
+                  ▶ Testar
+                </a>
+
+
+                <button
+                  type="button"
+                  data-acao="excluir"
+                  data-id="${prova.id}"
+                  class="
+                    bg-red-700
+                    hover:bg-red-600
+                    text-white
+                    text-xs
+                    font-bold
+                    px-4
+                    py-2
+                    rounded
+                  "
+                >
+                  🗑 Excluir
+                </button>
+
+              </div>
 
             </div>
 
@@ -2085,112 +2133,6 @@ function iniciarEscutaTentativas(prova) {
 }
 
 
-/* =========================================================
-   PAS-PROVA — EXCLUIR TODOS OS RESULTADOS ENVIADOS
-   Somente da avaliação selecionada
-   ========================================================= */
-
-async function excluirTodosResultadosEnviados() {
-
-  const prova = provaEmAcompanhamento;
-
-  if (!usuarioAtual || !prova?.id) {
-    alert("Nenhuma avaliação selecionada.");
-    return;
-  }
-
-  // Verificar autorização do usuário
-  if (
-    perfilAtual !== "administrador" &&
-    (
-      perfilAtual !== "professor" ||
-      prova.professorUid !== usuarioAtual.uid
-    )
-  ) {
-    alert("Você não possui permissão para excluir estes resultados.");
-    return;
-  }
-
-  try {
-
-    // Consultar somente resultados enviados desta prova
-    const consulta = query(
-      collection(db, "tentativas"),
-      where("provaId", "==", prova.id),
-      where("status", "==", "enviada")
-    );
-
-    const snapshot = await getDocs(consulta);
-
-    if (snapshot.empty) {
-      alert("Não existem resultados enviados para excluir.");
-      return;
-    }
-
-    // Confirmar antes de excluir
-    const confirmado = window.confirm(
-      `EXCLUIR TODOS OS RESULTADOS?\n\n` +
-      `Avaliação: ${prova.titulo || "Sem título"}\n` +
-      `Resultados enviados: ${snapshot.size}\n\n` +
-      `Serão excluídas as tentativas enviadas e suas notas.\n\n` +
-      `Serão preservados:\n` +
-      `• A prova cadastrada;\n` +
-      `• As tentativas em andamento;\n` +
-      `• O Google Forms original.\n\n` +
-      `Esta ação não pode ser desfeita.\n\n` +
-      `Deseja continuar?`
-    );
-
-    if (!confirmado) {
-      return;
-    }
-
-    const TAMANHO_LOTE = 400;
-    let quantidadeExcluida = 0;
-
-    // Excluir em lotes para respeitar os limites do Firestore
-    for (
-      let indice = 0;
-      indice < snapshot.docs.length;
-      indice += TAMANHO_LOTE
-    ) {
-
-      const lote = writeBatch(db);
-
-      const grupo = snapshot.docs.slice(
-        indice,
-        indice + TAMANHO_LOTE
-      );
-
-      grupo.forEach(documento => {
-        lote.delete(documento.ref);
-      });
-
-      await lote.commit();
-
-      quantidadeExcluida += grupo.length;
-    }
-
-    alert(
-      `${quantidadeExcluida} resultado(s) excluído(s) com sucesso!`
-    );
-
-    // O onSnapshot atualizará a tabela automaticamente.
-
-  } catch (erro) {
-
-    console.error(
-      "PAS-PROVA — Erro ao excluir todos os resultados:",
-      erro
-    );
-
-    alert(
-      "Não foi possível excluir todos os resultados.\n\n" +
-      erro.message
-    );
-  }
-}
-
 
 /* =========================================================
    PAS-PROVA — EXCLUIR RESULTADO INDIVIDUAL
@@ -2465,7 +2407,7 @@ function renderizarTentativas(tentativas) {
       rounded
     "
   >
-   🗑 Excluir
+    🗑 Excluir
   </button>
 </td>
 
@@ -2547,43 +2489,17 @@ function renderizarTentativas(tentativas) {
         </table>
 
       </div>
-      
 
-<!-- EXCLUIR TODOS OS RESULTADOS -->
-
-<div
-  style="
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 16px;
-    padding-top: 12px;
-    border-top: 1px solid #e2e8f0;
-  "
->
-  <button
-    type="button"
-    id="pas-excluir-todos-resultados"
-    ${resultados.length === 0 ? "disabled" : ""}
-    style="
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: #f8e9e9;
-      color: #a23838;
-      border: 1px solid #ebcaca;
-      border-radius: 8px;
-      padding: 10px 16px;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-    "
-  >
-    <span aria-hidden="true">🗑</span>
-    <span>Excluir todos</span>
-  </button>
-</div>
-
-
+      <div class="mt-4 flex flex-wrap items-center justify-end gap-2">
+        <button
+          type="button"
+          id="pas-excluir-todos-resultados"
+          ${resultados.length === 0 ? "disabled" : ""}
+          title="Excluir todos os resultados enviados desta avaliação"
+        >
+          🗑 Excluir todos
+        </button>
+      </div>
     `;
 
   }
@@ -2679,40 +2595,73 @@ function renderizarTentativas(tentativas) {
 
 
 /* =========================================================
-   PAS-PROVA — EVENTO DO BOTÃO EXCLUIR TODOS
+   PAS-PROVA — EXCLUIR TODOS OS RESULTADOS ENVIADOS
+   Apenas tentativas da avaliação aberta; preserva
+   prova cadastrada, tentativas não enviadas e Forms.
    ========================================================= */
 
-if (modalAcompanhamento) {
+async function excluirTodosResultadosEnviados() {
+  const prova = provaEmAcompanhamento;
+  if (!usuarioAtual || !prova?.id) {
+    alert("Nenhuma avaliação selecionada.");
+    return;
+  }
+  if (perfilAtual !== "administrador" &&
+      (perfilAtual !== "professor" || prova.professorUid !== usuarioAtual.uid)) {
+    alert("Você não possui permissão para excluir estes resultados.");
+    return;
+  }
 
-  modalAcompanhamento.addEventListener(
-    "click",
-    async (evento) => {
-
-      const botao = evento.target.closest(
-        "#pas-excluir-todos-resultados"
-      );
-
-      if (!botao || botao.disabled) {
-        return;
-      }
-
-      botao.disabled = true;
-
-      try {
-
-        await excluirTodosResultadosEnviados();
-
-      } finally {
-
-        if (botao.isConnected) {
-          botao.disabled = false;
-        }
-
-      }
-
-    }
+  const consulta = query(
+    collection(db, "tentativas"),
+    where("provaId", "==", prova.id),
+    where("status", "==", "enviada")
   );
 
+  try {
+    const snapshot = await getDocs(consulta);
+    if (snapshot.empty) {
+      alert("Não existem resultados enviados para excluir.");
+      return;
+    }
+
+    const confirmado = window.confirm(
+      `EXCLUIR TODOS OS RESULTADOS ENVIADOS?\n\n` +
+      `Avaliação: ${prova.titulo || "Sem título"}\n` +
+      `Resultados encontrados: ${snapshot.size}\n\n` +
+      `Serão excluídas as tentativas enviadas e suas notas no PAS-PROVA.\n` +
+      `A prova cadastrada, as tentativas em andamento e o Google Forms serão preservados.\n\n` +
+      `Esta ação não pode ser desfeita. Deseja continuar?`
+    );
+    if (!confirmado) return;
+
+    let quantidade = 0;
+    for (let i = 0; i < snapshot.docs.length; i += 400) {
+      const lote = writeBatch(db);
+      const grupo = snapshot.docs.slice(i, i + 400);
+      grupo.forEach(item => lote.delete(item.ref));
+      await lote.commit();
+      quantidade += grupo.length;
+    }
+    alert(`${quantidade} resultado(s) excluído(s) do PAS-PROVA.`);
+    // A lista e os contadores são atualizados pelo onSnapshot existente.
+  } catch (erro) {
+    console.error("Erro ao excluir todos os resultados:", erro);
+    alert("Não foi possível concluir a exclusão: " + erro.message);
+  }
+}
+
+if (modalAcompanhamento) {
+  modalAcompanhamento.addEventListener("click", async (evento) => {
+    const botao = evento.target.closest("#pas-excluir-todos-resultados");
+    if (!botao || botao.disabled) return;
+    botao.disabled = true;
+    try {
+      await excluirTodosResultadosEnviados();
+    } finally {
+      if (botao.isConnected) botao.disabled = false;
+    }
+  });
 }
 
 /* =========================================================
