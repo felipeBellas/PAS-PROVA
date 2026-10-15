@@ -1,38 +1,22 @@
-const CACHE_NAME = 'provas-pwa-v1';
-
-// Caminhos relativos sem a barra inicial para funcionar no GitHub Pages
-const ASSETS_TO_CACHE = [
-  './',
-  './index.html',
-  './professor.html',
-  './prova.html',
-  './assets/css/style.css',
-  './assets/js/firebase-config.js',
-  './assets/js/professor.js',
-  './assets/js/prova.js',
-  './manifest.json'
-];
-
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      // Usamos addAll com tratamento de erro para evitar que uma falha de recurso quebre todo o PWA
-      return cache.addAll(ASSETS_TO_CACHE).catch((err) => {
-        console.warn('Falha ao armazenar alguns recursos no cache:', err);
-      });
-    })
-  );
+/* PAS-PROVA - Service Worker: atualização segura, sem cache de páginas privadas. */
+const CACHE_NAME = 'pas-prova-public-v2';
+const PUBLIC_FILES = ['./', './index.html', './manifest.json'];
+self.addEventListener('install', event => {
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(PUBLIC_FILES)));
   self.skipWaiting();
 });
-
-self.addEventListener('activate', (e) => {
-  e.waitUntil(self.clients.claim());
+self.addEventListener('activate', event => {
+  event.waitUntil((async () => {
+    const names = await caches.keys();
+    await Promise.all(names.filter(name => name !== CACHE_NAME).map(name => caches.delete(name)));
+    await self.clients.claim();
+  })());
 });
-
-self.addEventListener('fetch', (e) => {
-  e.respondWith(
-    caches.match(e.request).then((response) => {
-      return response || fetch(e.request);
-    })
-  );
+self.addEventListener('fetch', event => {
+  const request = event.request;
+  if (request.method !== 'GET' || new URL(request.url).origin !== self.location.origin) return;
+  const url = new URL(request.url);
+  const publicPaths = PUBLIC_FILES.map(path => new URL(path, self.registration.scope).pathname);
+  if (!publicPaths.includes(url.pathname)) return;
+  event.respondWith(fetch(request).catch(() => caches.match(request)));
 });
