@@ -41,6 +41,7 @@ async function carregar(){
             turma:turma.nome,
             turmaId:prova.turmaId,
             instituicao:prova.instituicao||'',
+            professorNome:prova.professorNome||'',
             duracao:prova.duracao,
             instrucoes:prova.instrucoes||'',
             embaralharQuestoes:prova.embaralharQuestoes!==false,

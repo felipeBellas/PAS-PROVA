@@ -39,6 +39,7 @@ const aviso=(msg,erro=false)=>{
 
 function sync(){
   prova.instituicao=$('instituicao').value.trim();
+  prova.professorNome=$('professor-nome').value.trim();
   prova.titulo=$('titulo').value;
   prova.turma=$('turma').value;
   prova.turmaId=$('turma-id').value;
@@ -51,6 +52,7 @@ function sync(){
 
 function preencher(){
    $('instituicao').value=prova.instituicao || '';
+   $('professor-nome').value=prova.professorNome||'';
    $('titulo').value=prova.titulo;
   $('turma').value=prova.turma;
   $('turma-id').value=prova.turmaId||'';
@@ -202,7 +204,7 @@ $('publicar').onclick=async()=>{
       if(perfil!=='administrador')throw Error('Esta avaliação pertence a outro professor.');
     }
     botao.disabled=true;
-    const payload={scriptpas:'1.0',instituicao:prova.instituicao||'',titulo:prova.titulo.trim(),turma:prova.turma.trim(),turmaId:prova.turmaId,duracao:prova.duracao,instrucoes:prova.instrucoes||'',embaralharQuestoes:prova.embaralharQuestoes!==false,embaralharAlternativas:prova.embaralharAlternativas!==false,questoes:structuredClone(prova.questoes),professorUid:anterior?.exists()?anterior.data().professorUid:professorUid,estado:anterior?.exists()&&anterior.data().estado==='publicada'?'publicada':'preparacao',atualizadoEm:serverTimestamp()};
+    const payload={scriptpas:'1.0',instituicao:prova.instituicao||'',professorNome:prova.professorNome||'',titulo:prova.titulo.trim(),turma:prova.turma.trim(),turmaId:prova.turmaId,duracao:prova.duracao,instrucoes:prova.instrucoes||'',embaralharQuestoes:prova.embaralharQuestoes!==false,embaralharAlternativas:prova.embaralharAlternativas!==false,questoes:structuredClone(prova.questoes),professorUid:anterior?.exists()?anterior.data().professorUid:professorUid,estado:anterior?.exists()&&anterior.data().estado==='publicada'?'publicada':'preparacao',atualizadoEm:serverTimestamp()};
     if(!editarId)payload.criadoEm=serverTimestamp();
     await setDoc(ref,payload,{merge:!!editarId});
     aviso('Avaliação salva! Você pode gerenciá-la no Painel do Professor.');
