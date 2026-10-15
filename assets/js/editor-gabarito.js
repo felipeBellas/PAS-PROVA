@@ -1,4 +1,5 @@
 // Abre o gabarito protegido de uma avaliação já salva no Firebase.
+
 const botao=document.getElementById('gerar-gabarito');
 botao?.addEventListener('click',()=>{
   const id=new URLSearchParams(location.search).get('editar');
