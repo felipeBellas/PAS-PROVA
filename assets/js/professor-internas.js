@@ -1,12 +1,13 @@
 import {db,auth} from './firebase-config.js';
-
 import {onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
 import {collection,getDocs,doc,getDoc,deleteDoc,query,where,setDoc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+
 const area=document.getElementById('lista-internas');
 const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let usuario=null,admin=false;
+
 async function carregar(){
-  if(!usuario)return;
+  if(!usuario||!area)return;
   area.textContent='Carregando avaliações...';
   try{
     const base=collection(db,'provas_internas');
@@ -27,11 +28,30 @@ async function carregar(){
         publicar.disabled=true;
         try{
           const codigo=prova.codigoPublico||('PAS'+crypto.randomUUID().replace(/-/g,'').slice(0,16).toUpperCase());
-          const dados={provaId:prova.id,professorUid:prova.professorUid,codigo,titulo:prova.titulo,turma:prova.turma||'',instituicao:prova.instituicao||'',duracao:prova.duracao,instrucoes:prova.instrucoes||'',embaralharQuestoes:prova.embaralharQuestoes!==false,embaralharAlternativas:prova.embaralharAlternativas!==false,questoes:prova.questoes.map((q,i)=>({id:String(q.id||i),enunciado:q.enunciado,alternativas:q.alternativas.map(String)})),publicada:true,atualizadoEm:serverTimestamp()};
+          const dados={
+            provaId:prova.id,
+            professorUid:prova.professorUid,
+            codigo,
+            titulo:prova.titulo,
+            turma:prova.turma||'',
+            instituicao:prova.instituicao||'',
+            duracao:prova.duracao,
+            instrucoes:prova.instrucoes||'',
+            embaralharQuestoes:prova.embaralharQuestoes!==false,
+            embaralharAlternativas:prova.embaralharAlternativas!==false,
+            questoes:prova.questoes.map((q,i)=>({
+              id:String(q.id||i),
+              enunciado:q.enunciado,
+              alternativas:q.alternativas.map(String)
+            })),
+            estado:'publicada',
+            publicada:true,
+            atualizadoEm:serverTimestamp()
+          };
           await setDoc(doc(db,'aplicacoes_internas',codigo),dados);
           await setDoc(doc(db,'provas_internas',prova.id),{codigoPublico:codigo,estado:'publicada',atualizadoEm:serverTimestamp()},{merge:true});
           await carregar();
-        }catch(e){alert('Erro ao publicar: '+e.message);publicar.disabled=false;}
+        }catch(e){console.error('Falha ao publicar avaliação:',e);alert('Erro ao publicar: '+e.message);publicar.disabled=false;}
       };
       const link=document.createElement('button');link.type='button';link.textContent='Copiar link';link.disabled=prova.estado!=='publicada'||!prova.codigoPublico;link.style='padding:9px 14px;border-radius:7px;background:#e7edf4;color:#274b67';
       link.onclick=async()=>{const url=new URL('./prova-interna.html?codigo='+encodeURIComponent(prova.codigoPublico),location.href).href;try{await navigator.clipboard.writeText(url);alert('Link copiado: '+url);}catch(e){prompt('Copie o link da avaliação:',url);}};
@@ -39,9 +59,13 @@ async function carregar(){
     }
   }catch(e){area.textContent='Erro ao consultar avaliações: '+e.message;console.error(e)}
 }
+
 onAuthStateChanged(auth,async u=>{
   if(!u||u.isAnonymous)return;
-  try{const perfil=await getDoc(doc(db,'usuarios',u.uid));if(!perfil.exists()||perfil.data().ativo!==true||!['professor','administrador'].includes(perfil.data().perfil))return;
-  usuario=u;admin=perfil.data().perfil==='administrador';await carregar();}catch(e){area.textContent='Falha de autenticação: '+e.message}
+  try{
+    const perfil=await getDoc(doc(db,'usuarios',u.uid));
+    if(!perfil.exists()||perfil.data().ativo!==true||!['professor','administrador'].includes(perfil.data().perfil))return;
+    usuario=u;admin=perfil.data().perfil==='administrador';await carregar();
+  }catch(e){if(area)area.textContent='Falha de autenticação: '+e.message}
 });
 document.getElementById('atualizar-internas')?.addEventListener('click',carregar);
