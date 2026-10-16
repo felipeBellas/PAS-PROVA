@@ -16,3 +16,13 @@ PAS-PROVA INTERNO — ATUALIZAÇÃO PAS-SCRIPT 1.0 (CINCO ALTERNATIVAS)
 11. Rascunhos ficam apenas no armazenamento local do navegador. Faça backup dos seus dados importantes antes de limpar o navegador.
 
 COMANDO PAS-SCRIPT OFICIAL: incluído no botão Copiar comando para IA.
+
+## Licença
+
+O PAS-PROVA é um projeto proprietário de Felipe Bellas.
+Todos os direitos sobre os componentes originais são reservados.
+
+O acesso público ao repositório não autoriza cópia, modificação,
+redistribuição ou exploração comercial sem autorização expressa.
+
+Consulte [LICENSE-PROPRIETARY.md](LICENSE-PROPRIETARY.md).
